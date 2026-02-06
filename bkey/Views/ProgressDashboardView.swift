@@ -14,7 +14,7 @@ struct ProgressDashboardView: View {
                     .foregroundStyle(.white)
 
                 // WPM Over Time
-                if !sessions.isEmpty {
+                if !validSessions.isEmpty {
                     Section {
                         wpmChart
                     } header: {
@@ -45,7 +45,7 @@ struct ProgressDashboardView: View {
     @ViewBuilder
     private var wpmChart: some View {
         Chart {
-            ForEach(sessions, id: \.date) { session in
+            ForEach(validSessions, id: \.date) { session in
                 LineMark(
                     x: .value("Date", session.date),
                     y: .value("Gross WPM", session.wpm)
@@ -81,11 +81,16 @@ struct ProgressDashboardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
+    /// Sessions with plausible stats (filters out accidental/corrupt data)
+    private var validSessions: [SessionRecord] {
+        sessions.filter { $0.duration >= 5 && $0.wpm <= 300 }
+    }
+
     private var statsGrid: some View {
-        let totalSessions = sessions.count
-        let totalTime = sessions.reduce(0.0) { $0 + $1.duration }
-        let avgWPM = sessions.isEmpty ? 0 : sessions.reduce(0.0) { $0 + $1.wpm } / Double(sessions.count)
-        let bestWPM = sessions.map(\.wpm).max() ?? 0
+        let totalSessions = validSessions.count
+        let totalTime = validSessions.reduce(0.0) { $0 + $1.duration }
+        let avgWPM = validSessions.isEmpty ? 0 : validSessions.reduce(0.0) { $0 + $1.wpm } / Double(validSessions.count)
+        let bestWPM = validSessions.map(\.wpm).max() ?? 0
 
         return LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
             statCard(label: "Sessions", value: "\(totalSessions)")

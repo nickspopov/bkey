@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable var appState: AppState
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         Form {
@@ -32,5 +33,10 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 350, height: 400)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done") { dismiss() }
+            }
+        }
     }
 }

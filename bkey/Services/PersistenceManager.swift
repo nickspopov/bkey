@@ -23,6 +23,9 @@ struct PersistenceManager {
         let end = session.endTime ?? Date()
         let elapsed = end.timeIntervalSince(start)
 
+        // Skip trivially short sessions to avoid saving inflated stats
+        guard elapsed >= 5, session.keystrokes >= 10 else { return }
+
         let wpm = SessionMetrics.grossWPM(correctChars: session.correctChars, elapsedSeconds: elapsed)
         let net = SessionMetrics.netWPM(correctChars: session.correctChars, errors: session.errors, elapsedSeconds: elapsed)
         let acc = SessionMetrics.accuracy(correctChars: session.correctChars, totalKeystrokes: session.keystrokes)
