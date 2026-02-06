@@ -7,7 +7,7 @@ struct StatsBarView: View {
         HStack(spacing: 40) {
             statItem(
                 icon: "text.word.spacing",
-                value: "\(currentWPM)",
+                value: currentWPM.map { "\($0)" } ?? "--",
                 label: "words/min"
             )
             statItem(
@@ -48,9 +48,10 @@ struct StatsBarView: View {
         }
     }
 
-    private var currentWPM: Int {
-        guard let start = session.startTime, session.state == .active else { return 0 }
+    private var currentWPM: Int? {
+        guard let start = session.startTime, session.state == .active else { return nil }
         let elapsed = Date().timeIntervalSince(start)
+        guard elapsed >= 3, session.correctChars >= 10 else { return nil }
         return Int(SessionMetrics.grossWPM(correctChars: session.correctChars, elapsedSeconds: elapsed))
     }
 

@@ -4,7 +4,6 @@ import SwiftData
 struct LessonPickerView: View {
     @Bindable var appState: AppState
     @Query private var lessonRecords: [LessonRecord]
-    @Environment(\.dismiss) private var dismiss
 
     private let tiers = [
         (1, "Home Row"),
@@ -21,7 +20,6 @@ struct LessonPickerView: View {
                     // Free Run button
                     Button {
                         appState.startFreeRun()
-                        dismiss()
                     } label: {
                         HStack {
                             Image(systemName: "keyboard")
@@ -64,13 +62,7 @@ struct LessonPickerView: View {
 
         return Button {
             if case .locked = status { return }
-            appState.mode = .lesson(lessonId: lesson.id)
-            appState.session = TypingSession(
-                wordGenerator: WordGenerator(words: wordsForLesson(lesson))
-            )
-            appState.session.start()
-            appState.updateActiveKeyCode()
-            dismiss()
+            appState.startLesson(id: lesson.id)
         } label: {
             HStack {
                 Text("\(lesson.id).")
@@ -128,25 +120,4 @@ struct LessonPickerView: View {
         return .locked
     }
 
-    private func wordsForLesson(_ lesson: Lesson) -> [String] {
-        // Generate words using only allowed keys
-        let allowed = lesson.allowedKeys
-        let gen = WordGenerator()
-        let allWords = gen.generateBatch(count: 200)
-        let filtered = allWords.filter { word in
-            word.allSatisfy { allowed.contains($0) }
-        }
-        if filtered.count >= 10 {
-            return filtered
-        }
-        // Fallback: generate character combinations
-        let chars = Array(allowed).filter { $0 != " " }
-        var words: [String] = []
-        for _ in 0..<50 {
-            let len = Int.random(in: 2...5)
-            let word = String((0..<len).map { _ in chars.randomElement()! })
-            words.append(word)
-        }
-        return words
-    }
 }

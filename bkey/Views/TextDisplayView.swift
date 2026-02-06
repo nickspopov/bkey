@@ -11,25 +11,32 @@ struct TextDisplayView: View {
 
     private let font: Font = .system(size: 22, design: .monospaced)
 
+    private let caretColor = Color(red: 99/255, green: 179/255, blue: 237/255) // #63B3ED
+
     var body: some View {
         let displayFont = Font.system(size: fontSize, design: .monospaced)
 
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
-                ZStack(alignment: .leading) {
-                    // Build attributed text
-                    textContent(font: displayFont)
-
-                    // Caret overlay
-                    caretOverlay(font: displayFont)
-                        .id("caret")
+                HStack(spacing: 0) {
+                    let text = session.targetText
+                    ForEach(Array(text.enumerated()), id: \.offset) { index, char in
+                        Text(String(char))
+                            .font(displayFont)
+                            .foregroundStyle(colorForState(session.characterStates[safe: index] ?? .pending))
+                            .background(alignment: .leading) {
+                                if index == session.currentIndex {
+                                    caretView
+                                }
+                            }
+                            .id(index)
+                    }
                 }
                 .padding(.horizontal, 20)
             }
             .onChange(of: session.currentIndex) {
-                // Scroll to keep caret visible
                 withAnimation(.easeOut(duration: 0.08)) {
-                    proxy.scrollTo("caret", anchor: .center)
+                    proxy.scrollTo(session.currentIndex, anchor: .center)
                 }
                 resetBlinkTimer()
             }
@@ -40,45 +47,27 @@ struct TextDisplayView: View {
     }
 
     @ViewBuilder
-    private func textContent(font: Font) -> some View {
-        let text = session.targetText
-        if text.isEmpty {
-            Text("").font(font)
-        } else {
-            HStack(spacing: 0) {
-                ForEach(Array(text.enumerated()), id: \.offset) { index, char in
-                    Text(String(char))
-                        .font(font)
-                        .foregroundStyle(colorForState(session.characterStates[safe: index] ?? .pending))
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func caretOverlay(font: Font) -> some View {
-        let charWidth = fontSize * 0.6 // approximate monospace char width
-        let xOffset = CGFloat(session.currentIndex) * charWidth + 20 // +20 for padding
-
+    private var caretView: some View {
         switch caretStyle {
         case .line:
             Rectangle()
-                .fill(Color(red: 99/255, green: 179/255, blue: 237/255)) // #63B3ED
+                .fill(caretColor)
                 .frame(width: 2, height: fontSize * 1.4)
-                .offset(x: xOffset - 1, y: 0)
                 .opacity(caretVisible ? 1 : 0)
         case .block:
             Rectangle()
-                .fill(Color(red: 99/255, green: 179/255, blue: 237/255).opacity(0.3))
-                .frame(width: charWidth, height: fontSize * 1.4)
-                .offset(x: xOffset, y: 0)
+                .fill(caretColor.opacity(0.3))
+                .frame(height: fontSize * 1.4)
                 .opacity(caretVisible ? 1 : 0)
         case .underline:
-            Rectangle()
-                .fill(Color(red: 99/255, green: 179/255, blue: 237/255))
-                .frame(width: charWidth, height: 2)
-                .offset(x: xOffset, y: fontSize * 0.6)
-                .opacity(caretVisible ? 1 : 0)
+            VStack {
+                Spacer()
+                Rectangle()
+                    .fill(caretColor)
+                    .frame(height: 2)
+            }
+            .frame(height: fontSize * 1.4)
+            .opacity(caretVisible ? 1 : 0)
         }
     }
 
