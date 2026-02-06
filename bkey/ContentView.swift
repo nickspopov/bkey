@@ -3,7 +3,6 @@ import SwiftUI
 struct ContentView: View {
     @State private var appState = AppState()
     @State private var eventMonitor: Any?
-    @State private var statsTimer: Timer?
 
     var body: some View {
         ZStack {
@@ -12,9 +11,36 @@ struct ContentView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Settings gear
-                HStack {
+                // Top bar: tabs + settings
+                HStack(spacing: 0) {
+                    // Tab picker
+                    HStack(spacing: 4) {
+                        ForEach(AppTab.allCases, id: \.self) { tab in
+                            Button {
+                                appState.selectedTab = tab
+                                if tab == .freeRun && appState.mode != .freeRun {
+                                    appState.startFreeRun()
+                                }
+                            } label: {
+                                Text(tab.rawValue)
+                                    .font(.system(size: 13, weight: appState.selectedTab == tab ? .semibold : .regular))
+                                    .foregroundStyle(appState.selectedTab == tab ? .white : .gray)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        appState.selectedTab == tab
+                                            ? Color.white.opacity(0.1)
+                                            : Color.clear
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.leading, 16)
+
                     Spacer()
+
                     Button {
                         appState.showSettings.toggle()
                     } label: {
@@ -24,50 +50,25 @@ struct ContentView: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.trailing, 16)
-                    .padding(.top, 8)
                 }
+                .padding(.top, 8)
 
-                // Stats bar
-                if appState.showLiveStats {
-                    StatsBarView(session: appState.session)
-                        .id(appState.session.keystrokes) // force refresh
-                }
-
-                Spacer()
-
-                // Text display
-                TextDisplayView(
-                    session: appState.session,
-                    fontSize: CGFloat(appState.fontSize),
-                    caretStyle: appState.caretStyle
-                )
-
-                Spacer()
-
-                // On-screen keyboard
-                if appState.showKeyboard {
-                    KeyboardView(
-                        activeKeyCode: appState.activeKeyCode,
-                        lastPressedKeyCode: appState.lastPressedKeyCode,
-                        lastPressCorrect: appState.lastPressCorrect,
-                        showFingerLabels: appState.showFingerLabels
-                    )
-                    .frame(height: 220)
-                    .padding(.bottom, 10)
+                // Content based on selected tab
+                switch appState.selectedTab {
+                case .freeRun:
+                    typingView
+                case .lessons:
+                    LessonPickerView(appState: appState)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                case .progress:
+                    ProgressDashboardView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
 
             // Session summary overlay
             if appState.showSessionSummary {
-                SessionSummaryView(
-                    session: appState.session,
-                    onTryAgain: {
-                        appState.startFreeRun()
-                    },
-                    onClose: {
-                        appState.showSessionSummary = false
-                    }
-                )
+                sessionSummaryOverlay
             }
         }
         .sheet(isPresented: $appState.showSettings) {
@@ -79,9 +80,73 @@ struct ContentView: View {
         }
         .onDisappear {
             KeyEventHandler.removeMonitor(eventMonitor)
-            statsTimer?.invalidate()
         }
         .frame(minWidth: 900, minHeight: 600)
+    }
+
+    @ViewBuilder
+    private var typingView: some View {
+        VStack(spacing: 0) {
+            // Stats bar
+            if appState.showLiveStats {
+                StatsBarView(session: appState.session)
+                    .id(appState.session.keystrokes) // force refresh
+            }
+
+            Spacer()
+
+            // Text display
+            TextDisplayView(
+                session: appState.session,
+                fontSize: CGFloat(appState.fontSize),
+                caretStyle: appState.caretStyle
+            )
+
+            Spacer()
+
+            // On-screen keyboard
+            if appState.showKeyboard {
+                KeyboardView(
+                    activeKeyCode: appState.activeKeyCode,
+                    lastPressedKeyCode: appState.lastPressedKeyCode,
+                    lastPressCorrect: appState.lastPressCorrect,
+                    showFingerLabels: appState.showFingerLabels
+                )
+                .frame(height: 220)
+                .padding(.bottom, 10)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var sessionSummaryOverlay: some View {
+        if let lesson = appState.currentLesson {
+            // Lesson mode: show lesson result
+            LessonResultView(
+                lesson: lesson,
+                session: appState.session,
+                onNext: {
+                    appState.startNextLesson()
+                },
+                onRetry: {
+                    appState.startLesson(id: lesson.id)
+                },
+                onClose: {
+                    appState.showSessionSummary = false
+                }
+            )
+        } else {
+            // Free run mode: show standard summary
+            SessionSummaryView(
+                session: appState.session,
+                onTryAgain: {
+                    appState.startFreeRun()
+                },
+                onClose: {
+                    appState.showSessionSummary = false
+                }
+            )
+        }
     }
 }
 
