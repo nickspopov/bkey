@@ -52,4 +52,54 @@ struct KeyProficiencyRecordTests {
         }
         #expect(record.confidence == 0.0)
     }
+
+    @Test func confidenceAtSpeedBoundary170() {
+        let record = KeyProficiencyRecord(character: "g")
+        record.averageSpeedMs = 170
+        for _ in 0..<20 {
+            record.recordAttempt(correct: true)
+        }
+        // speedFactor = 1.0 at 170ms, accuracy = 1.0 => confidence = 1.0
+        #expect(record.confidence == 1.0)
+    }
+
+    @Test func confidenceAtSpeedBoundary500() {
+        let record = KeyProficiencyRecord(character: "h")
+        record.averageSpeedMs = 500
+        for _ in 0..<20 {
+            record.recordAttempt(correct: true)
+        }
+        // speedFactor = 0.0 at 500ms => confidence = 0.0
+        #expect(record.confidence == 0.0)
+    }
+
+    @Test func confidenceMidRange() {
+        let record = KeyProficiencyRecord(character: "i")
+        record.averageSpeedMs = 335 // midpoint between 170 and 500
+        for _ in 0..<20 {
+            record.recordAttempt(correct: true)
+        }
+        // speedFactor = (500-335)/(500-170) = 165/330 = 0.5
+        // accuracy = 1.0, accFactor = 1.0
+        // confidence = 0.5 * 1.0 = 0.5
+        #expect(record.confidence == 0.5)
+    }
+
+    @Test func recentSpeedsEmptyByDefault() {
+        let record = KeyProficiencyRecord(character: "j")
+        #expect(record.recentSpeeds.isEmpty)
+    }
+
+    @Test func lastPracticedUpdatedOnRecordAttempt() {
+        let record = KeyProficiencyRecord(character: "k")
+        let before = Date()
+        record.recordAttempt(correct: true)
+        #expect(record.lastPracticed >= before)
+    }
+
+    @Test func recentSpeedsRoundTripsWithEmptyData() {
+        let record = KeyProficiencyRecord(character: "l")
+        record.recentSpeedsData = Data()
+        #expect(record.recentSpeeds.isEmpty)
+    }
 }

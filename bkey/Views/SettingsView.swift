@@ -33,6 +33,7 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 350, height: 400)
+        .onDisappear { appState.saveSettings() }
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done") { dismiss() }
