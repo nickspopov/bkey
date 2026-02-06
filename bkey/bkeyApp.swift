@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct bkeyApp: App {
@@ -8,5 +9,6 @@ struct bkeyApp: App {
         }
         .defaultSize(width: 1100, height: 700)
         .windowResizability(.contentMinSize)
+        .modelContainer(PersistenceManager.shared)
     }
 }
