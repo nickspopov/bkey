@@ -12,7 +12,10 @@ struct KeyboardView: View {
         GeometryReader { geometry in
             let totalWidth = geometry.size.width - 40 // padding
             // Calculate unit width from the widest row (number row has ~14.5 units)
-            let unitWidth = totalWidth / 14.5
+            let widthBased = totalWidth / 14.5
+            // Also constrain by available height: 5 rows * 0.95 height + 4 * 2pt spacing
+            let heightBased = (geometry.size.height - 8) / (5 * 0.95)
+            let unitWidth = min(widthBased, heightBased)
 
             VStack(spacing: 2) {
                 ForEach(Array(LayoutDefinition.qwertyUS.enumerated()), id: \.offset) { _, row in
