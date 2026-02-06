@@ -75,6 +75,7 @@ struct ContentView: View {
             SettingsView(appState: appState)
         }
         .onAppear {
+            appState.loadProficiencyData()
             appState.startFreeRun()
             eventMonitor = KeyEventHandler.setupMonitor(appState: appState)
         }
@@ -110,7 +111,8 @@ struct ContentView: View {
                     activeKeyCode: appState.activeKeyCode,
                     lastPressedKeyCode: appState.lastPressedKeyCode,
                     lastPressCorrect: appState.lastPressCorrect,
-                    showFingerLabels: appState.showFingerLabels
+                    showFingerLabels: appState.showFingerLabels,
+                    keystrokeCount: appState.keystrokeCount
                 )
                 .frame(height: 220)
                 .padding(.bottom, 10)

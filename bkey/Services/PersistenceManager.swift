@@ -51,6 +51,48 @@ struct PersistenceManager {
         profile.totalPracticeTime += elapsed
         profile.totalWordsTyped += session.correctChars / 5
 
+        // Save per-key proficiency data
+        saveProficiencyData(from: session, context: context)
+
         try? context.save()
+    }
+
+    @MainActor
+    private static func saveProficiencyData(from session: TypingSession, context: ModelContext) {
+        let keystrokes = session.characterKeystrokes
+        guard !keystrokes.isEmpty else { return }
+
+        // Group keystrokes by character
+        var charAttempts: [Character: [(correct: Bool, time: Date)]] = [:]
+        for ks in keystrokes {
+            charAttempts[ks.character, default: []].append((correct: ks.correct, time: ks.time))
+        }
+
+        // Compute transition times: delta between consecutive keystrokes (any character)
+        var transitionTimes: [Character: [Double]] = [:]
+        for i in 1..<keystrokes.count {
+            let delta = keystrokes[i].time.timeIntervalSince(keystrokes[i - 1].time) * 1000 // ms
+            guard delta <= 5000 else { continue } // filter pauses
+            transitionTimes[keystrokes[i].character, default: []].append(delta)
+        }
+
+        for (char, attempts) in charAttempts {
+            let charString = String(char)
+            let descriptor = FetchDescriptor<KeyProficiencyRecord>(
+                predicate: #Predicate { $0.character == charString }
+            )
+            let existing = (try? context.fetch(descriptor))?.first
+            let profRecord = existing ?? KeyProficiencyRecord(character: charString)
+            if existing == nil { context.insert(profRecord) }
+
+            for attempt in attempts {
+                profRecord.recordAttempt(correct: attempt.correct)
+            }
+
+            if let times = transitionTimes[char], !times.isEmpty {
+                let avgDelta = times.reduce(0, +) / Double(times.count)
+                profRecord.addTransitionTime(avgDelta)
+            }
+        }
     }
 }

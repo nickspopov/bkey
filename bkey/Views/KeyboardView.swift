@@ -5,6 +5,7 @@ struct KeyboardView: View {
     let lastPressedKeyCode: UInt16?
     let lastPressCorrect: Bool
     let showFingerLabels: Bool
+    let keystrokeCount: Int
 
     @State private var flashingKeyCode: UInt16? = nil
 
@@ -33,6 +34,14 @@ struct KeyboardView: View {
             }
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .onChange(of: keystrokeCount) {
+            flashingKeyCode = lastPressedKeyCode
+            let duration: Double = lastPressCorrect ? 0.15 : 0.2
+            Task {
+                try? await Task.sleep(for: .seconds(duration))
+                flashingKeyCode = nil
+            }
         }
     }
 

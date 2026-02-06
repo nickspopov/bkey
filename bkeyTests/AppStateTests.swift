@@ -1,4 +1,5 @@
 import Testing
+import Foundation
 @testable import bkey
 
 struct AppStateTests {
@@ -127,5 +128,175 @@ struct AppStateTests {
         let appState = AppState()
         appState.startFreeRun()
         #expect(appState.currentLesson == nil)
+    }
+
+    // MARK: - Error Mode Passing
+
+    @Test func sessionInheritsErrorModeFromAppState() {
+        let appState = AppState()
+        appState.errorMode = .forceCorrect
+        appState.startFreeRun()
+        #expect(appState.session.errorMode == .forceCorrect)
+    }
+
+    @Test func lessonSessionInheritsErrorMode() {
+        let appState = AppState()
+        appState.errorMode = .stopOnWord
+        appState.startLesson(id: 1)
+        #expect(appState.session.errorMode == .stopOnWord)
+    }
+
+    // MARK: - Keystroke Count
+
+    @Test func keystrokeCountIncrementsOnCharacter() {
+        let appState = AppState()
+        appState.startFreeRun()
+        #expect(appState.keystrokeCount == 0)
+        let char = appState.session.currentCharacter!
+        let keyCode = KeyMapping.keyCode(for: char) ?? 0
+        appState.handleCharacter(char, keyCode: keyCode)
+        #expect(appState.keystrokeCount == 1)
+        // Second keystroke
+        if let next = appState.session.currentCharacter {
+            appState.handleCharacter(next, keyCode: KeyMapping.keyCode(for: next) ?? 0)
+            #expect(appState.keystrokeCount == 2)
+        }
+    }
+
+    @Test func keystrokeCountIncrementsOnWrongKey() {
+        let appState = AppState()
+        appState.startFreeRun()
+        appState.handleCharacter("~", keyCode: 999)
+        #expect(appState.keystrokeCount == 1)
+    }
+
+    @Test func keystrokeCountNotIncrementedWhenSessionComplete() {
+        let appState = AppState()
+        appState.startFreeRun()
+        // Complete the session
+        while appState.session.state != .complete {
+            if let char = appState.session.currentCharacter {
+                appState.handleCharacter(char, keyCode: KeyMapping.keyCode(for: char) ?? 0)
+            } else {
+                break
+            }
+        }
+        let countAfterComplete = appState.keystrokeCount
+        appState.handleCharacter("x", keyCode: 7)
+        #expect(appState.keystrokeCount == countAfterComplete) // unchanged
+    }
+
+    // MARK: - Settings Persistence
+
+    @Test func saveAndLoadSettingsRoundTrip() {
+        let settingsKeys = ["showKeyboard", "showFingerLabels", "fontSize", "soundOnKeystroke",
+                            "soundOnError", "showLiveStats", "caretStyle", "errorMode"]
+        let defaults = UserDefaults.standard
+
+        // Clean before
+        for key in settingsKeys { defaults.removeObject(forKey: key) }
+
+        let appState = AppState()
+        appState.showKeyboard = false
+        appState.showFingerLabels = true
+        appState.fontSize = 28
+        appState.soundOnKeystroke = true
+        appState.soundOnError = false
+        appState.showLiveStats = false
+        appState.caretStyle = .block
+        appState.errorMode = .forceCorrect
+        appState.saveSettings()
+
+        // Create a new AppState which reads from UserDefaults in init
+        let loaded = AppState()
+        #expect(loaded.showKeyboard == false)
+        #expect(loaded.showFingerLabels == true)
+        #expect(loaded.fontSize == 28)
+        #expect(loaded.soundOnKeystroke == true)
+        #expect(loaded.soundOnError == false)
+        #expect(loaded.showLiveStats == false)
+        #expect(loaded.caretStyle == .block)
+        #expect(loaded.errorMode == .forceCorrect)
+
+        // Clean after
+        for key in settingsKeys { defaults.removeObject(forKey: key) }
+    }
+
+    // MARK: - Proficiency Tracker
+
+    @Test func proficiencyTrackerInitiallyEmpty() {
+        let appState = AppState()
+        #expect(appState.proficiencyTracker.proficiencies.isEmpty)
+    }
+
+    @Test func handleCharacterDoesNotIncrementWhenPaused() {
+        let appState = AppState()
+        appState.startFreeRun()
+        // End the session first
+        let char = appState.session.currentCharacter!
+        appState.handleCharacter(char, keyCode: KeyMapping.keyCode(for: char) ?? 0)
+        appState.handleEscape()
+        let count = appState.keystrokeCount
+        appState.handleCharacter("x", keyCode: 7) // session is complete
+        #expect(appState.keystrokeCount == count)
+    }
+
+    // MARK: - Session Completion
+
+    @Test func sessionCompletionShowsSummary() {
+        let appState = AppState()
+        appState.startFreeRun()
+        // Type all chars to complete
+        while appState.session.state != .complete {
+            if let char = appState.session.currentCharacter {
+                appState.handleCharacter(char, keyCode: KeyMapping.keyCode(for: char) ?? 0)
+            } else {
+                break
+            }
+        }
+        #expect(appState.showSessionSummary == true)
+    }
+
+    @Test func escapeShowsSessionSummary() {
+        let appState = AppState()
+        appState.startFreeRun()
+        let char = appState.session.currentCharacter!
+        appState.handleCharacter(char, keyCode: KeyMapping.keyCode(for: char) ?? 0)
+        appState.handleEscape()
+        #expect(appState.showSessionSummary == true)
+    }
+
+    // MARK: - Active Key Code
+
+    @Test func activeKeyCodeNilAfterSessionComplete() {
+        let appState = AppState()
+        appState.startFreeRun()
+        while appState.session.state != .complete {
+            if let char = appState.session.currentCharacter {
+                appState.handleCharacter(char, keyCode: KeyMapping.keyCode(for: char) ?? 0)
+            } else {
+                break
+            }
+        }
+        #expect(appState.activeKeyCode == nil)
+    }
+
+    @Test func activeKeyCodeUpdatesAfterTypingAndBackspace() {
+        let appState = AppState()
+        appState.startFreeRun()
+        let firstChar = appState.session.currentCharacter!
+        let firstKeyCode = appState.activeKeyCode
+        appState.handleCharacter(firstChar, keyCode: KeyMapping.keyCode(for: firstChar) ?? 0)
+        // After typing first char, active key targets second char
+        let secondCharKeyCode = appState.activeKeyCode
+        #expect(secondCharKeyCode != nil)
+        // Type second char
+        let secondChar = appState.session.currentCharacter!
+        appState.handleCharacter(secondChar, keyCode: KeyMapping.keyCode(for: secondChar) ?? 0)
+        // Backspace — goes back to second char position
+        appState.handleBackspace()
+        // Active key should now target the second char again
+        #expect(appState.activeKeyCode == secondCharKeyCode)
+        _ = firstKeyCode // suppress unused warning
     }
 }

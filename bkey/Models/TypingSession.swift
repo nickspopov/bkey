@@ -29,10 +29,15 @@ class TypingSession {
     // Rolling window for best WPM
     private(set) var timestampedKeystrokes: [(time: Date, correct: Bool)] = []
 
-    private let wordGenerator: WordGenerator
+    // Per-key proficiency tracking
+    private(set) var characterKeystrokes: [(character: Character, correct: Bool, time: Date)] = []
 
-    init(wordGenerator: WordGenerator = WordGenerator()) {
+    private let wordGenerator: WordGenerator
+    let errorMode: ErrorMode
+
+    init(wordGenerator: WordGenerator = WordGenerator(), errorMode: ErrorMode = .continueOnError) {
         self.wordGenerator = wordGenerator
+        self.errorMode = errorMode
     }
 
     func start() {
@@ -48,6 +53,7 @@ class TypingSession {
         endTime = nil
         state = .ready
         timestampedKeystrokes = []
+        characterKeystrokes = []
         computeWordBoundaries()
     }
 
@@ -77,16 +83,25 @@ class TypingSession {
         keystrokes += 1
         let expected = targetText[targetText.index(targetText.startIndex, offsetBy: currentIndex)]
 
+        let now = Date()
+
         if character == expected {
             characterStates[currentIndex] = .correct
             correctChars += 1
-            timestampedKeystrokes.append((time: Date(), correct: true))
+            timestampedKeystrokes.append((time: now, correct: true))
+            characterKeystrokes.append((character: expected, correct: true, time: now))
             currentIndex += 1
         } else {
             characterStates[currentIndex] = .incorrect
             errors += 1
-            timestampedKeystrokes.append((time: Date(), correct: false))
-            currentIndex += 1
+            timestampedKeystrokes.append((time: now, correct: false))
+            characterKeystrokes.append((character: expected, correct: false, time: now))
+            switch errorMode {
+            case .continueOnError:
+                currentIndex += 1
+            case .forceCorrect, .stopOnWord:
+                break // stay put, user must retype
+            }
         }
 
         // Check if session is complete
