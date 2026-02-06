@@ -9,7 +9,7 @@ struct Lesson: Identifiable, Sendable {
     let gateWPM: Int
     let gateAccuracy: Double // 0-100
 
-    enum CompletionStatus: Sendable {
+    enum CompletionStatus: Sendable, Equatable {
         case locked
         case available
         case completed(stars: Int) // 1-3
