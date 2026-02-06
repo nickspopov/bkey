@@ -21,6 +21,7 @@ struct SessionSummaryView: View {
                 ], spacing: 16) {
                     summaryItem(label: "WPM", value: "\(finalWPM)")
                     summaryItem(label: "Net WPM", value: "\(finalNetWPM)")
+                    summaryItem(label: "Best WPM", value: "\(finalBestWPM)")
                     summaryItem(label: "Accuracy", value: "\(finalAccuracy)%")
                     summaryItem(label: "Typos", value: "\(session.errors)")
                     summaryItem(label: "Characters", value: "\(session.keystrokes)")
@@ -74,6 +75,10 @@ struct SessionSummaryView: View {
 
     private var finalNetWPM: Int {
         Int(SessionMetrics.netWPM(correctChars: session.correctChars, errors: session.errors, elapsedSeconds: elapsedSeconds))
+    }
+
+    private var finalBestWPM: Int {
+        Int(SessionMetrics.bestWPM(keystrokes: session.timestampedKeystrokes))
     }
 
     private var finalAccuracy: Int {

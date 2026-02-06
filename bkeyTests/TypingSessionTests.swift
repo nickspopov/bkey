@@ -148,6 +148,63 @@ struct TypingSessionTests {
         #expect(session.timestampedKeystrokes[1].correct == false)
     }
 
+    @Test func forceCorrectModeDoesNotAdvanceOnError() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["hi"]), errorMode: .forceCorrect)
+        session.start()
+        session.processCharacter("x") // wrong — should NOT advance
+        #expect(session.currentIndex == 0)
+        #expect(session.errors == 1)
+        #expect(session.keystrokes == 1)
+        // Pressing wrong again increments errors but stays put
+        session.processCharacter("z")
+        #expect(session.currentIndex == 0)
+        #expect(session.errors == 2)
+        #expect(session.keystrokes == 2)
+        // Correct key advances
+        session.processCharacter("h")
+        #expect(session.currentIndex == 1)
+    }
+
+    @Test func stopOnWordModeDoesNotAdvanceOnError() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["hi"]), errorMode: .stopOnWord)
+        session.start()
+        session.processCharacter("x") // wrong — should NOT advance
+        #expect(session.currentIndex == 0)
+        #expect(session.errors == 1)
+        // Correct key advances
+        session.processCharacter("h")
+        #expect(session.currentIndex == 1)
+    }
+
+    @Test func continueOnErrorModeAdvancesOnError() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["hi"]), errorMode: .continueOnError)
+        session.start()
+        session.processCharacter("x") // wrong — SHOULD advance
+        #expect(session.currentIndex == 1)
+        #expect(session.errors == 1)
+    }
+
+    @Test func characterKeystrokesRecorded() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["hi"]))
+        session.start()
+        session.processCharacter("h") // correct
+        session.processCharacter("x") // wrong — expected 'i'
+        #expect(session.characterKeystrokes.count == 2)
+        #expect(session.characterKeystrokes[0].character == "h")
+        #expect(session.characterKeystrokes[0].correct == true)
+        #expect(session.characterKeystrokes[1].character == "i") // expected char, not typed char
+        #expect(session.characterKeystrokes[1].correct == false)
+    }
+
+    @Test func characterKeystrokesClearedOnRestart() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["hi"]))
+        session.start()
+        session.processCharacter("h")
+        #expect(session.characterKeystrokes.count == 1)
+        session.restart()
+        #expect(session.characterKeystrokes.isEmpty)
+    }
+
     @Test func endSessionFromNonActiveStateDoesNothing() {
         let session = TypingSession(wordGenerator: WordGenerator(words: ["hi"]))
         session.start()
@@ -155,6 +212,82 @@ struct TypingSessionTests {
         session.endSession()
         #expect(session.state == .ready) // unchanged
         #expect(session.endTime == nil)
+    }
+
+    @Test func forceCorrectModeCompletesSessionWhenAllCorrect() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["a"]), errorMode: .forceCorrect)
+        session.start()
+        // Type all chars correctly
+        for char in session.targetText {
+            session.processCharacter(char)
+        }
+        #expect(session.state == .complete)
+        #expect(session.errors == 0)
+    }
+
+    @Test func forceCorrectModeRecordsCharacterKeystrokesOnError() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["ab"]), errorMode: .forceCorrect)
+        session.start()
+        session.processCharacter("x") // wrong for 'a'
+        session.processCharacter("a") // correct
+        #expect(session.characterKeystrokes.count == 2)
+        // Both refer to expected char 'a' since we didn't advance
+        #expect(session.characterKeystrokes[0].character == "a")
+        #expect(session.characterKeystrokes[0].correct == false)
+        #expect(session.characterKeystrokes[1].character == "a")
+        #expect(session.characterKeystrokes[1].correct == true)
+    }
+
+    @Test func defaultErrorModeIsContinueOnError() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["hi"]))
+        #expect(session.errorMode == .continueOnError)
+    }
+
+    @Test func endSessionSetsEndTime() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["hi"]))
+        session.start()
+        session.processCharacter("h") // activate
+        session.endSession()
+        #expect(session.endTime != nil)
+        #expect(session.state == .complete)
+    }
+
+    @Test func endSessionCalledTwiceDoesNotChangeEndTime() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["hi"]))
+        session.start()
+        session.processCharacter("h")
+        session.endSession()
+        let firstEndTime = session.endTime
+        session.endSession() // second call — state is .complete, not .active
+        #expect(session.endTime == firstEndTime)
+    }
+
+    @Test func multipleWordsJoinedWithSpaces() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["cat", "dog"]))
+        session.start()
+        // targetText contains spaces between words
+        #expect(session.targetText.contains(" "))
+        // Each word should be either "cat" or "dog"
+        let words = session.targetText.split(separator: " ")
+        #expect(words.allSatisfy { $0 == "cat" || $0 == "dog" })
+    }
+
+    @Test func wordBoundariesComputedCorrectly() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["ab", "cd"]))
+        session.start()
+        // word boundaries: 0 (start of "ab"), 3 (start of "cd"), ...
+        #expect(session.wordBoundaries[0] == 0)
+        #expect(session.wordBoundaries[1] == 3) // "ab" (2) + " " (1) = 3
+    }
+
+    @Test func backspaceWorksWithinSameWord() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["abc"]))
+        session.start()
+        session.processCharacter("a") // index 1
+        session.processCharacter("x") // wrong, index 2 (continueOnError)
+        session.processBackspace()     // back to 1
+        session.processBackspace()     // back to 0
+        #expect(session.currentIndex == 0)
     }
 }
 
@@ -216,5 +349,43 @@ struct SessionMetricsTests {
     @Test func accuracyWithZeroKeystrokesReturns100() {
         let acc = SessionMetrics.accuracy(correctChars: 0, totalKeystrokes: 0)
         #expect(acc == 100.0)
+    }
+
+    @Test func bestWPMWithMultipleKeystrokes() {
+        let start = Date()
+        // Simulate 10 correct keystrokes over 10 seconds
+        var keystrokes: [(time: Date, correct: Bool)] = []
+        for i in 0..<10 {
+            keystrokes.append((time: start.addingTimeInterval(Double(i)), correct: true))
+        }
+        let best = SessionMetrics.bestWPM(keystrokes: keystrokes)
+        // 10 correct chars in 10-second window => (10/5) / (10/60) = 12 WPM
+        #expect(best == 12.0)
+    }
+
+    @Test func bestWPMIgnoresIncorrectKeystrokes() {
+        let start = Date()
+        var keystrokes: [(time: Date, correct: Bool)] = []
+        for i in 0..<5 {
+            keystrokes.append((time: start.addingTimeInterval(Double(i)), correct: true))
+        }
+        for i in 5..<10 {
+            keystrokes.append((time: start.addingTimeInterval(Double(i)), correct: false))
+        }
+        let best = SessionMetrics.bestWPM(keystrokes: keystrokes)
+        // Best window will include 5 correct out of 10-second window
+        // (5/5) / (10/60) = 6 WPM
+        #expect(best == 6.0)
+    }
+
+    @Test func grossWPMWith30Seconds() {
+        // 25 correct chars in 30 seconds = (25/5) / 0.5 = 10 WPM
+        let wpm = SessionMetrics.grossWPM(correctChars: 25, elapsedSeconds: 30)
+        #expect(wpm == 10.0)
+    }
+
+    @Test func formattedTimeWithLargeValue() {
+        #expect(SessionMetrics.formattedTime(125) == "2:05")
+        #expect(SessionMetrics.formattedTime(59) == "0:59")
     }
 }
