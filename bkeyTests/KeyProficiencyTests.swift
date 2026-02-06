@@ -57,4 +57,55 @@ struct KeyProficiencyTests {
         #expect(result.count <= 5)
         #expect(!result.isEmpty)
     }
+
+    @Test func averageSpeedDefaultsTo500WhenEmpty() {
+        let data = KeyProficiencyTracker.ProficiencyData()
+        #expect(data.averageSpeed == 500)
+    }
+
+    @Test func accuracyIsZeroWithNoAttempts() {
+        let data = KeyProficiencyTracker.ProficiencyData()
+        #expect(data.accuracy == 0)
+    }
+
+    @Test func recentSpeedsCappedAt20() {
+        let tracker = KeyProficiencyTracker()
+        for i in 0..<25 {
+            tracker.recordAttempt(character: "x", correct: true, transitionTimeMs: Double(i * 10 + 100))
+        }
+        #expect(tracker.proficiencies["x"]!.recentSpeeds.count == 20)
+    }
+
+    @Test func weakestCharactersWithFilterReturnsOnlyAllowed() {
+        let tracker = KeyProficiencyTracker()
+        tracker.recordAttempt(character: "a", correct: true, transitionTimeMs: 150)
+        tracker.recordAttempt(character: "b", correct: false, transitionTimeMs: 450)
+        tracker.recordAttempt(character: "c", correct: true, transitionTimeMs: 300)
+
+        let allowed: Set<Character> = ["a", "c"]
+        let weak = tracker.weakestCharacters(count: 5, from: allowed)
+        #expect(!weak.contains("b"))
+        #expect(weak.allSatisfy { allowed.contains($0) })
+    }
+
+    @Test func adaptiveWordSelectorEmptyWeakCharsStillWorks() {
+        let words = ["hello", "world", "test"]
+        let result = AdaptiveWordSelector.selectWords(
+            count: 3,
+            allWords: words,
+            weakChars: [],
+            proficiencies: [:]
+        )
+        #expect(!result.isEmpty)
+    }
+
+    @Test func adaptiveWordSelectorEmptyWordsReturnsEmpty() {
+        let result = AdaptiveWordSelector.selectWords(
+            count: 5,
+            allWords: [],
+            weakChars: ["e"],
+            proficiencies: [:]
+        )
+        #expect(result.isEmpty)
+    }
 }
