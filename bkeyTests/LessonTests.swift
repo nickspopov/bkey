@@ -35,4 +35,29 @@ struct LessonTests {
         #expect(lesson8.allowedKeys.contains("a"))
         #expect(lesson8.allowedKeys.contains(" "))
     }
+
+    @Test func lessonByIdInvalidReturnsNil() {
+        #expect(LessonCurriculum.lesson(byId: 999) == nil)
+    }
+
+    @Test func lessonByIdZeroReturnsNil() {
+        #expect(LessonCurriculum.lesson(byId: 0) == nil)
+    }
+
+    @Test func tierDistribution() {
+        let tiers = Dictionary(grouping: LessonCurriculum.allLessons, by: \.tier)
+        #expect(tiers[1]?.count == 8)
+        #expect(tiers[2]?.count == 10)
+        #expect(tiers[3]?.count == 10)
+        #expect(tiers[4]?.count == 6)
+        #expect(tiers[5]?.count == 11)
+    }
+
+    @Test func allLessonsHavePositiveGates() {
+        for lesson in LessonCurriculum.allLessons {
+            #expect(lesson.gateWPM > 0, "Lesson \(lesson.id) has non-positive gateWPM")
+            #expect(lesson.gateAccuracy > 0, "Lesson \(lesson.id) has non-positive gateAccuracy")
+            #expect(lesson.gateAccuracy <= 100, "Lesson \(lesson.id) has gateAccuracy > 100")
+        }
+    }
 }
