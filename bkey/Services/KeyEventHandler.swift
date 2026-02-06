@@ -20,8 +20,11 @@ struct KeyEventHandler {
                 return nil
             }
 
-            // Escape — end session
+            // Escape — pass through when a sheet is open so it can dismiss
             if keyCode == 53 {
+                if appState.showSettings || appState.showSessionSummary {
+                    return event
+                }
                 appState.handleEscape()
                 return nil
             }
