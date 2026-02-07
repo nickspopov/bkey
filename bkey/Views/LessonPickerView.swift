@@ -3,7 +3,9 @@ import SwiftData
 
 struct LessonPickerView: View {
     @Bindable var appState: AppState
+    @Environment(\.modelContext) private var modelContext
     @Query private var lessonRecords: [LessonRecord]
+    @State private var lessonToSkip: Lesson?
 
     private let tiers = [
         (1, "Home Row"),
@@ -54,37 +56,74 @@ struct LessonPickerView: View {
             .navigationTitle("Lessons")
         }
         .frame(width: 500, height: 600)
+        .alert("Skip Lesson", isPresented: Binding(
+            get: { lessonToSkip != nil },
+            set: { if !$0 { lessonToSkip = nil } }
+        )) {
+            Button("Skip", role: .destructive) {
+                if let lesson = lessonToSkip {
+                    skipLesson(lesson)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            if let lesson = lessonToSkip {
+                Text("Skip \"\(lesson.title)\"? You can come back to it later.")
+            }
+        }
+    }
+
+    private var firstAvailableLessonId: Int? {
+        for lesson in LessonCurriculum.allLessons {
+            let record = lessonRecords.first { $0.lessonId == lesson.id }
+            let status = lessonStatus(lesson, record: record)
+            if status == .available {
+                return lesson.id
+            }
+        }
+        return nil
     }
 
     private func lessonRow(_ lesson: Lesson) -> some View {
         let record = lessonRecords.first { $0.lessonId == lesson.id }
         let status = lessonStatus(lesson, record: record)
+        let isFirstAvailable = lesson.id == firstAvailableLessonId
 
-        return Button {
-            if case .locked = status { return }
-            appState.startLesson(id: lesson.id)
-        } label: {
-            HStack {
-                Text("\(lesson.id).")
-                    .foregroundStyle(.gray)
-                    .frame(width: 30)
-                Text(lesson.title)
-                    .foregroundStyle(status == .locked ? .gray.opacity(0.5) : .white)
-                Spacer()
-                if !lesson.newKeys.isEmpty {
-                    Text(lesson.newKeys.map(String.init).joined(separator: " "))
-                        .font(.caption.monospaced())
+        return HStack {
+            Button {
+                appState.startLesson(id: lesson.id)
+            } label: {
+                HStack {
+                    Text("\(lesson.id).")
                         .foregroundStyle(.gray)
+                        .frame(width: 30)
+                    Text(lesson.title)
+                        .foregroundStyle(status == .locked ? .gray.opacity(0.5) : .white)
+                    Spacer()
+                    if !lesson.newKeys.isEmpty {
+                        Text(lesson.newKeys.map(String.init).joined(separator: " "))
+                            .font(.caption.monospaced())
+                            .foregroundStyle(.gray)
+                    }
+                    starsView(status)
                 }
-                starsView(status)
             }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 12)
-            .background(Color.white.opacity(status == .locked ? 0.02 : 0.05))
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .buttonStyle(.plain)
+            .disabled(status == .locked)
+
+            if isFirstAvailable {
+                Button("Skip") {
+                    lessonToSkip = lesson
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .foregroundStyle(.gray)
+            }
         }
-        .buttonStyle(.plain)
-        .disabled(status == .locked)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 12)
+        .background(Color.white.opacity(status == .locked ? 0.02 : 0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 
     @ViewBuilder
@@ -95,6 +134,10 @@ struct LessonPickerView: View {
                 .foregroundStyle(.gray.opacity(0.3))
         case .available:
             EmptyView()
+        case .skipped:
+            Image(systemName: "forward.fill")
+                .font(.caption)
+                .foregroundStyle(.orange.opacity(0.6))
         case .completed(let stars):
             HStack(spacing: 2) {
                 ForEach(1...3, id: \.self) { i in
@@ -110,14 +153,27 @@ struct LessonPickerView: View {
         if let record = record, record.stars > 0 {
             return .completed(stars: record.stars)
         }
+        if let record = record, record.skipped {
+            return .skipped
+        }
         // Lesson 1 is always available
         if lesson.id == 1 { return .available }
-        // Check if previous lesson is completed
+        // Check if previous lesson is completed or skipped
         let prevRecord = lessonRecords.first { $0.lessonId == lesson.id - 1 }
-        if let prev = prevRecord, prev.stars > 0 {
+        if let prev = prevRecord, prev.stars > 0 || prev.skipped {
             return .available
         }
         return .locked
+    }
+
+    private func skipLesson(_ lesson: Lesson) {
+        let record = lessonRecords.first { $0.lessonId == lesson.id } ?? {
+            let r = LessonRecord(lessonId: lesson.id)
+            modelContext.insert(r)
+            return r
+        }()
+        record.skipped = true
+        try? modelContext.save()
     }
 
 }
