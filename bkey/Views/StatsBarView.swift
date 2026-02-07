@@ -2,25 +2,35 @@ import SwiftUI
 
 struct StatsBarView: View {
     let session: TypingSession
+    var lesson: Lesson? = nil
 
     var body: some View {
-        HStack(spacing: 40) {
-            statItem(
-                icon: "text.word.spacing",
-                value: currentWPM.map { "\($0)" } ?? "--",
-                label: "words/min"
-            )
-            statItem(
-                icon: "scope",
-                value: "\(currentAccuracy)",
-                label: "accuracy",
-                suffix: "%"
-            )
-            statItem(
-                icon: "exclamationmark.circle",
-                value: "\(session.errors)",
-                label: "typos"
-            )
+        VStack(spacing: 4) {
+            HStack(spacing: 40) {
+                statItem(
+                    icon: "text.word.spacing",
+                    value: currentWPM.map { "\($0)" } ?? "--",
+                    label: "words/min"
+                )
+                statItem(
+                    icon: "scope",
+                    value: "\(currentAccuracy)",
+                    label: "accuracy",
+                    suffix: "%"
+                )
+                statItem(
+                    icon: "exclamationmark.circle",
+                    value: "\(session.errors)",
+                    label: "typos"
+                )
+            }
+
+            // Gate criteria (lesson mode only)
+            if let lesson = lesson {
+                Text("Target: \(lesson.gateWPM) WPM, \(Int(lesson.gateAccuracy))% accuracy")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.gray.opacity(0.7))
+            }
         }
         .padding(.vertical, 20)
     }

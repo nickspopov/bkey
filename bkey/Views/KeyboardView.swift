@@ -6,6 +6,7 @@ struct KeyboardView: View {
     let lastPressCorrect: Bool
     let showFingerLabels: Bool
     let keystrokeCount: Int
+    var highlightedKeys: Set<UInt16> = []
 
     @State private var flashingKeyCode: UInt16? = nil
 
@@ -50,6 +51,9 @@ struct KeyboardView: View {
             return lastPressCorrect ? .pressedCorrect : .pressedIncorrect
         }
         if keyCode == activeKeyCode {
+            return .target
+        }
+        if highlightedKeys.contains(keyCode) {
             return .target
         }
         return .idle
