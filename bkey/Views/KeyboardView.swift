@@ -36,6 +36,7 @@ struct KeyboardView: View {
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .accessibilityIdentifier("keyboardView")
         .onChange(of: keystrokeCount) {
             flashingKeyCode = lastPressedKeyCode
             let duration: Double = lastPressCorrect ? 0.15 : 0.2

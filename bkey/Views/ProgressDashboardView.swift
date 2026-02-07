@@ -40,6 +40,7 @@ struct ProgressDashboardView: View {
         }
         .background(Color(red: 13/255, green: 17/255, blue: 23/255))
         .frame(width: 600, height: 700)
+        .accessibilityIdentifier("progressDashboard")
     }
 
     @ViewBuilder

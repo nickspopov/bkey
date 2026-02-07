@@ -102,6 +102,7 @@ struct LessonResultView: View {
             )
             .onAppear { saveLessonResult(stars: starRating) }
         }
+        .accessibilityIdentifier("lessonResult")
     }
 
     private func summaryItem(label: String, value: String) -> some View {
