@@ -12,6 +12,7 @@ struct Lesson: Identifiable, Sendable {
     enum CompletionStatus: Sendable, Equatable {
         case locked
         case available
+        case skipped
         case completed(stars: Int) // 1-3
     }
 
