@@ -80,5 +80,8 @@ struct LessonCompletionStatusTests {
         #expect(Lesson.CompletionStatus.completed(stars: 2) == Lesson.CompletionStatus.completed(stars: 2))
         #expect(Lesson.CompletionStatus.completed(stars: 1) != Lesson.CompletionStatus.completed(stars: 3))
         #expect(Lesson.CompletionStatus.locked != Lesson.CompletionStatus.available)
+        #expect(Lesson.CompletionStatus.skipped == Lesson.CompletionStatus.skipped)
+        #expect(Lesson.CompletionStatus.skipped != Lesson.CompletionStatus.available)
+        #expect(Lesson.CompletionStatus.skipped != Lesson.CompletionStatus.locked)
     }
 }
