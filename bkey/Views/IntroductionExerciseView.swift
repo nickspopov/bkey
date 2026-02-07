@@ -61,6 +61,7 @@ struct IntroductionExerciseView: View {
                 .padding(.top, 8)
         }
         .padding(.horizontal, 40)
+        .accessibilityIdentifier("introductionExercise")
     }
 
     private var highlightedKeyCodes: Set<UInt16> {

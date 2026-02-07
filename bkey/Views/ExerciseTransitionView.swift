@@ -70,6 +70,7 @@ struct ExerciseTransitionView: View {
                     .shadow(radius: 20)
             )
         }
+        .accessibilityIdentifier("exerciseTransition")
     }
 
     private func miniStat(label: String, value: String) -> some View {

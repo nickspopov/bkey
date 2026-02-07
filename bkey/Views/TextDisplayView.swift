@@ -42,6 +42,8 @@ struct TextDisplayView: View {
             }
         }
         .frame(height: fontSize * 2.5)
+        .accessibilityIdentifier("typingTextDisplay")
+        .accessibilityValue(session.targetText)
         .onAppear { startBlinkTimer() }
         .onDisappear { blinkTimer?.invalidate() }
     }

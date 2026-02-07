@@ -35,6 +35,7 @@ struct ExerciseProgressBar: View {
             }
         }
         .padding(.vertical, 8)
+        .accessibilityIdentifier("exerciseProgressBar")
     }
 
     private func fillColor(for id: Int) -> Color {
