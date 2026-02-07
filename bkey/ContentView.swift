@@ -66,6 +66,20 @@ struct ContentView: View {
                 }
             }
 
+            // Exercise transition overlay
+            if appState.showExerciseTransition, let flow = appState.lessonFlow {
+                ExerciseTransitionView(
+                    completedExercise: flow.exercises[flow.currentExerciseIndex],
+                    nextExercise: flow.currentExerciseIndex + 1 < flow.exercises.count
+                        ? flow.exercises[flow.currentExerciseIndex + 1]
+                        : nil,
+                    lastResult: flow.exerciseResults.last,
+                    onContinue: {
+                        appState.advanceExercise()
+                    }
+                )
+            }
+
             // Session summary overlay
             if appState.showSessionSummary {
                 sessionSummaryOverlay
@@ -88,44 +102,73 @@ struct ContentView: View {
     @ViewBuilder
     private var typingView: some View {
         VStack(spacing: 0) {
-            // Stats bar
-            if appState.showLiveStats {
-                StatsBarView(session: appState.session)
-                    .id(appState.session.keystrokes) // force refresh
+            // Exercise progress bar (lesson mode only)
+            if let flow = appState.lessonFlow {
+                ExerciseProgressBar(
+                    exercises: flow.exercises,
+                    currentIndex: flow.currentExerciseIndex,
+                    completedCount: flow.exerciseResults.count
+                )
             }
 
-            Spacer()
+            // Check if we're on an introduction exercise
+            if let flow = appState.lessonFlow,
+               let exercise = flow.currentExercise,
+               exercise.type == .introduction {
+                Spacer()
+                IntroductionExerciseView(exercise: exercise, appState: appState)
+                Spacer()
+            } else {
+                // Stats bar
+                if appState.showLiveStats {
+                    StatsBarView(session: appState.session, lesson: appState.currentLesson)
+                        .id(appState.session.keystrokes) // force refresh
+                }
 
-            // Text display
-            TextDisplayView(
-                session: appState.session,
-                fontSize: CGFloat(appState.fontSize),
-                caretStyle: appState.caretStyle
-            )
+                Spacer()
 
-            Spacer()
+                // Lesson typing progress bar
+                if appState.lessonFlow != nil {
+                    let total = max(appState.session.targetText.count, 1)
+                    ProgressView(value: Double(appState.session.currentIndex), total: Double(total))
+                        .tint(Color(red: 99/255, green: 179/255, blue: 237/255))
+                        .scaleEffect(y: 1.5) // 3px height
+                        .padding(.horizontal, 40)
+                        .animation(.easeOut(duration: 0.1), value: appState.session.currentIndex)
+                }
 
-            // On-screen keyboard
-            if appState.showKeyboard {
-                KeyboardView(
-                    activeKeyCode: appState.activeKeyCode,
-                    lastPressedKeyCode: appState.lastPressedKeyCode,
-                    lastPressCorrect: appState.lastPressCorrect,
-                    showFingerLabels: appState.showFingerLabels,
-                    keystrokeCount: appState.keystrokeCount
+                // Text display
+                TextDisplayView(
+                    session: appState.session,
+                    fontSize: CGFloat(appState.fontSize),
+                    caretStyle: appState.caretStyle
                 )
-                .frame(height: 220)
-                .padding(.bottom, 10)
+
+                Spacer()
+
+                // On-screen keyboard
+                if appState.showKeyboard {
+                    KeyboardView(
+                        activeKeyCode: appState.activeKeyCode,
+                        lastPressedKeyCode: appState.lastPressedKeyCode,
+                        lastPressCorrect: appState.lastPressCorrect,
+                        showFingerLabels: appState.showFingerLabels,
+                        keystrokeCount: appState.keystrokeCount
+                    )
+                    .frame(height: 220)
+                    .padding(.bottom, 10)
+                }
             }
         }
     }
 
     @ViewBuilder
     private var sessionSummaryOverlay: some View {
-        if let lesson = appState.currentLesson {
+        if let lesson = appState.currentLesson, let flow = appState.lessonFlow {
             // Lesson mode: show lesson result
             LessonResultView(
                 lesson: lesson,
+                lessonFlow: flow,
                 session: appState.session,
                 onNext: {
                     appState.startNextLesson()

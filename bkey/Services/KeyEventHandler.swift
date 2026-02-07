@@ -29,8 +29,13 @@ struct KeyEventHandler {
                 return nil
             }
 
-            // Enter — not used in typing; ignore
+            // Enter — complete introduction exercise if on one
             if keyCode == 36 {
+                if let flow = appState.lessonFlow,
+                   let exercise = flow.currentExercise,
+                   exercise.type == .introduction {
+                    appState.completeIntroduction()
+                }
                 return nil
             }
 

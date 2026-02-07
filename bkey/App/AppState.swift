@@ -23,6 +23,10 @@ class AppState {
     var showProgress: Bool = false
     var selectedTab: AppTab = .freeRun
 
+    // Multi-exercise lesson flow
+    var lessonFlow: LessonFlowState? = nil
+    var showExerciseTransition: Bool = false
+
     // Settings
     var showKeyboard: Bool = true
     var showFingerLabels: Bool = false
@@ -82,6 +86,8 @@ class AppState {
 
     func startFreeRun() {
         mode = .freeRun
+        lessonFlow = nil
+        showExerciseTransition = false
         let words: [String]
         if !proficiencyTracker.proficiencies.isEmpty {
             let weakChars = proficiencyTracker.weakestCharacters(count: 5)
@@ -105,12 +111,45 @@ class AppState {
     func startLesson(id: Int) {
         guard let lesson = LessonCurriculum.lesson(byId: id) else { return }
         mode = .lesson(lessonId: id)
-        let words = wordsForLesson(lesson)
-        session = TypingSession(wordGenerator: WordGenerator(words: words), errorMode: errorMode)
-        session.start()
+        lessonFlow = LessonFlowState(lesson: lesson)
         showSessionSummary = false
+        showExerciseTransition = false
         selectedTab = .freeRun
-        updateActiveKeyCode()
+        startCurrentExercise()
+    }
+
+    func startCurrentExercise() {
+        guard let flow = lessonFlow, let exercise = flow.currentExercise else { return }
+
+        if exercise.type == .introduction {
+            // Placeholder session for intro (not typing)
+            session = TypingSession()
+            activeKeyCode = nil
+        } else {
+            // Typing exercise: use exercise's target words
+            let words = exercise.targetWords
+            session = TypingSession(wordGenerator: WordGenerator(words: words), errorMode: errorMode)
+            session.start()
+            updateActiveKeyCode()
+        }
+    }
+
+    func advanceExercise() {
+        guard let flow = lessonFlow else { return }
+        showExerciseTransition = false
+        if flow.advanceToNextExercise() {
+            startCurrentExercise()
+        } else {
+            // Lesson complete — show final result
+            showSessionSummary = true
+        }
+    }
+
+    func completeIntroduction() {
+        guard let flow = lessonFlow,
+              let exercise = flow.currentExercise,
+              exercise.type == .introduction else { return }
+        showExerciseTransition = true
     }
 
     func startNextLesson() {
@@ -123,6 +162,16 @@ class AppState {
     }
 
     func handleCharacter(_ character: Character, keyCode: UInt16) {
+        // Intercept space during introduction exercises
+        if let flow = lessonFlow,
+           let exercise = flow.currentExercise,
+           exercise.type == .introduction {
+            if character == " " {
+                completeIntroduction()
+            }
+            return
+        }
+
         guard session.state == .ready || session.state == .active else { return }
 
         lastPressedKeyCode = keyCode
@@ -191,7 +240,6 @@ class AppState {
     }
 
     private func handleSessionComplete() {
-        showSessionSummary = true
         // Save session to persistence
         let modeString: String
         switch mode {
@@ -200,44 +248,21 @@ class AppState {
         }
         PersistenceManager.saveSession(from: session, mode: modeString)
         updateProficiencyFromSession()
-    }
 
-    private func wordsForLesson(_ lesson: Lesson) -> [String] {
-        let allowed = lesson.allowedKeys
-        let gen = WordGenerator()
-        let allWords = gen.generateBatch(count: 200)
-        let filtered = allWords.filter { word in
-            word.allSatisfy { allowed.contains($0) }
-        }
-
-        let baseWords: [String]
-        if filtered.count >= 10 {
-            baseWords = filtered
-        } else {
-            // Fallback: generate character combinations
-            let chars = Array(allowed).filter { $0 != " " }
-            guard !chars.isEmpty else { return ["test"] }
-            var words: [String] = []
-            for _ in 0..<50 {
-                let len = Int.random(in: 2...5)
-                let word = String((0..<len).map { _ in chars.randomElement()! })
-                words.append(word)
+        // Handle lesson flow
+        if let flow = lessonFlow {
+            flow.recordResult(from: session)
+            if flow.isOnLastExercise {
+                // Lesson complete — show final result
+                showSessionSummary = true
+            } else {
+                // Show transition to next exercise
+                showExerciseTransition = true
             }
-            baseWords = words
+        } else {
+            // Free run — show summary
+            showSessionSummary = true
         }
-
-        // Use adaptive selection if proficiency data exists
-        if !proficiencyTracker.proficiencies.isEmpty {
-            let weakChars = proficiencyTracker.weakestCharacters(count: 5, from: allowed)
-            return AdaptiveWordSelector.selectWords(
-                count: 50,
-                allWords: baseWords,
-                weakChars: weakChars,
-                proficiencies: proficiencyTracker.proficiencies
-            )
-        }
-
-        return baseWords
     }
 }
 
