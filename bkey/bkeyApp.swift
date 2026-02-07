@@ -1,11 +1,5 @@
-//
-//  bkeyApp.swift
-//  bkey
-//
-//  Created by Nick Popov on 06.02.2026.
-//
-
 import SwiftUI
+import SwiftData
 
 @main
 struct bkeyApp: App {
@@ -13,5 +7,8 @@ struct bkeyApp: App {
         WindowGroup {
             ContentView()
         }
+        .defaultSize(width: 1100, height: 700)
+        .windowResizability(.contentMinSize)
+        .modelContainer(PersistenceManager.shared)
     }
 }
