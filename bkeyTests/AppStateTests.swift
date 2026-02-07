@@ -24,8 +24,8 @@ struct AppStateTests {
         appState.startLesson(id: 1)
         #expect(appState.mode == .lesson(lessonId: 1))
         #expect(appState.selectedTab == .freeRun)
-        #expect(!appState.session.targetText.isEmpty)
-        #expect(appState.session.state == .ready)
+        #expect(appState.lessonFlow != nil)
+        #expect(appState.lessonFlow?.lesson.id == 1)
     }
 
     @Test func startLessonWithInvalidIdDoesNothing() {
@@ -142,7 +142,8 @@ struct AppStateTests {
     @Test func lessonSessionInheritsErrorMode() {
         let appState = AppState()
         appState.errorMode = .stopOnWord
-        appState.startLesson(id: 1)
+        // Use a review lesson (no intro exercise) so session is created immediately with words
+        appState.startLesson(id: 7) // Home Row Review
         #expect(appState.session.errorMode == .stopOnWord)
     }
 
