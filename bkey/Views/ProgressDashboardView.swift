@@ -44,41 +44,98 @@ struct ProgressDashboardView: View {
 
     @ViewBuilder
     private var wpmChart: some View {
-        Chart {
-            ForEach(validSessions, id: \.date) { session in
-                LineMark(
-                    x: .value("Date", session.date),
-                    y: .value("Gross WPM", session.wpm)
-                )
-                .foregroundStyle(Color(red: 99/255, green: 179/255, blue: 237/255))
-                .symbol(Circle())
+        VStack(spacing: 8) {
+            Chart {
+                ForEach(validSessions, id: \.date) { session in
+                    LineMark(
+                        x: .value("Date", session.date),
+                        y: .value("Gross WPM", session.wpm)
+                    )
+                    .foregroundStyle(Color(red: 99/255, green: 179/255, blue: 237/255))
+                    .symbol(Circle())
 
-                LineMark(
-                    x: .value("Date", session.date),
-                    y: .value("Net WPM", session.netWpm)
-                )
-                .foregroundStyle(Color(red: 104/255, green: 211/255, blue: 145/255))
-                .symbol(Diamond())
+                    LineMark(
+                        x: .value("Date", session.date),
+                        y: .value("Net WPM", session.netWpm)
+                    )
+                    .foregroundStyle(Color(red: 104/255, green: 211/255, blue: 145/255))
+                    .symbol(Diamond())
+                }
+
+                // 7-day rolling average
+                ForEach(rollingAverages, id: \.date) { avg in
+                    LineMark(
+                        x: .value("Date", avg.date),
+                        y: .value("7-Day Avg", avg.avgWPM)
+                    )
+                    .foregroundStyle(Color.orange)
+                    .lineStyle(StrokeStyle(lineWidth: 2, dash: [5, 3]))
+                    .interpolationMethod(.catmullRom)
+                }
             }
-        }
-        .chartXAxis {
-            AxisMarks(values: .automatic) { _ in
-                AxisGridLine()
-                AxisValueLabel()
-                    .foregroundStyle(.gray)
+            .chartXAxis {
+                AxisMarks(values: .automatic) { _ in
+                    AxisGridLine()
+                    AxisValueLabel()
+                        .foregroundStyle(.gray)
+                }
             }
-        }
-        .chartYAxis {
-            AxisMarks { _ in
-                AxisGridLine()
-                AxisValueLabel()
-                    .foregroundStyle(.gray)
+            .chartYAxis {
+                AxisMarks { _ in
+                    AxisGridLine()
+                    AxisValueLabel()
+                        .foregroundStyle(.gray)
+                }
             }
+            .frame(height: 200)
+
+            // Chart legend
+            HStack(spacing: 16) {
+                legendItem(color: Color(red: 99/255, green: 179/255, blue: 237/255), label: "Gross WPM")
+                legendItem(color: Color(red: 104/255, green: 211/255, blue: 145/255), label: "Net WPM")
+                legendItem(color: .orange, label: "7-Day Avg", dashed: true)
+            }
+            .font(.caption2)
         }
-        .frame(height: 200)
         .padding()
         .background(Color.white.opacity(0.03))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func legendItem(color: Color, label: String, dashed: Bool = false) -> some View {
+        HStack(spacing: 4) {
+            if dashed {
+                Rectangle()
+                    .fill(color)
+                    .frame(width: 12, height: 2)
+                    .overlay(
+                        HStack(spacing: 2) {
+                            Rectangle().fill(color).frame(width: 4, height: 2)
+                            Rectangle().fill(color).frame(width: 4, height: 2)
+                        }
+                    )
+            } else {
+                Circle()
+                    .fill(color)
+                    .frame(width: 6, height: 6)
+            }
+            Text(label)
+                .foregroundStyle(.gray)
+        }
+    }
+
+    /// 7-day rolling average WPM for each session date
+    private var rollingAverages: [(date: Date, avgWPM: Double)] {
+        let sorted = validSessions
+        guard sorted.count >= 2 else { return [] }
+
+        let sevenDays: TimeInterval = 7 * 24 * 60 * 60
+        return sorted.map { session in
+            let windowStart = session.date.addingTimeInterval(-sevenDays)
+            let inWindow = sorted.filter { $0.date >= windowStart && $0.date <= session.date }
+            let avg = inWindow.reduce(0.0) { $0 + $1.wpm } / Double(inWindow.count)
+            return (date: session.date, avgWPM: avg)
+        }
     }
 
     /// Sessions with plausible stats (filters out accidental/corrupt data)
