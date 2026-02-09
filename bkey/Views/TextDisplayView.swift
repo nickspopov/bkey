@@ -5,13 +5,13 @@ struct TextDisplayView: View {
     let fontSize: CGFloat
     let caretStyle: CaretStyle
 
+    @Environment(\.appTheme) private var theme
+
     @State private var caretVisible = true
     @State private var isTyping = false
     @State private var blinkTimer: Timer?
 
     private let font: Font = .system(size: 22, design: .monospaced)
-
-    private let caretColor = Color(red: 99/255, green: 179/255, blue: 237/255) // #63B3ED
 
     var body: some View {
         let displayFont = Font.system(size: fontSize, design: .monospaced)
@@ -53,19 +53,19 @@ struct TextDisplayView: View {
         switch caretStyle {
         case .line:
             Rectangle()
-                .fill(caretColor)
+                .fill(theme.accent)
                 .frame(width: 2, height: fontSize * 1.4)
                 .opacity(caretVisible ? 1 : 0)
         case .block:
             Rectangle()
-                .fill(caretColor.opacity(0.3))
+                .fill(theme.accent.opacity(0.3))
                 .frame(height: fontSize * 1.4)
                 .opacity(caretVisible ? 1 : 0)
         case .underline:
             VStack {
                 Spacer()
                 Rectangle()
-                    .fill(caretColor)
+                    .fill(theme.accent)
                     .frame(height: 2)
             }
             .frame(height: fontSize * 1.4)
@@ -75,10 +75,10 @@ struct TextDisplayView: View {
 
     private func colorForState(_ state: CharacterState) -> Color {
         switch state {
-        case .pending:   Color(red: 74/255, green: 85/255, blue: 104/255)   // #4A5568
-        case .correct:   Color(red: 226/255, green: 232/255, blue: 240/255) // #E2E8F0
-        case .incorrect: Color(red: 245/255, green: 101/255, blue: 101/255) // #F56565
-        case .corrected: Color(red: 226/255, green: 232/255, blue: 240/255) // #E2E8F0 (same as correct)
+        case .pending:   theme.textSecondary
+        case .correct:   theme.textPrimary
+        case .incorrect: theme.textError
+        case .corrected: theme.textPrimary
         }
     }
 
