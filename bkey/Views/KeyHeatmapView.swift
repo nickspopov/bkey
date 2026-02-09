@@ -2,6 +2,7 @@ import SwiftUI
 
 struct KeyHeatmapView: View {
     let proficiencies: [KeyProficiencyRecord]
+    @Environment(\.appTheme) private var theme
     @State private var hoveredKey: String? = nil
 
     var body: some View {
@@ -19,7 +20,7 @@ struct KeyHeatmapView: View {
             }
         }
         .padding()
-        .background(Color.white.opacity(0.03))
+        .background(theme.statsBackground)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
@@ -32,11 +33,11 @@ struct KeyHeatmapView: View {
         return VStack(spacing: 2) {
             Text(key.label)
                 .font(.system(size: 12, weight: .medium, design: .monospaced))
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.textPrimary)
             if let record = record, record.totalAttempts > 0 {
                 Text("\(Int(record.confidence * 100))%")
                     .font(.system(size: 7))
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(theme.textPrimary.opacity(0.6))
             }
         }
         .frame(width: 36, height: 36)
@@ -44,7 +45,7 @@ struct KeyHeatmapView: View {
         .clipShape(RoundedRectangle(cornerRadius: 4))
         .overlay(
             RoundedRectangle(cornerRadius: 4)
-                .stroke(Color.white, lineWidth: isHovered ? 2 : 0)
+                .stroke(theme.textPrimary, lineWidth: isHovered ? 2 : 0)
         )
         .onHover { hovering in
             hoveredKey = hovering ? char : nil

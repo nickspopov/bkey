@@ -4,6 +4,7 @@ import SwiftData
 struct LessonPickerView: View {
     @Bindable var appState: AppState
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.appTheme) private var theme
     @Query private var lessonRecords: [LessonRecord]
     @State private var lessonToSkip: Lesson?
 
@@ -31,7 +32,7 @@ struct LessonPickerView: View {
                             Image(systemName: "chevron.right")
                         }
                         .padding()
-                        .background(Color.white.opacity(0.05))
+                        .background(theme.statsBackground)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                     .buttonStyle(.plain)
@@ -45,14 +46,14 @@ struct LessonPickerView: View {
                         } header: {
                             Text("Tier \(tier): \(tierName)")
                                 .font(.headline)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(theme.textPrimary)
                                 .padding(.top, 8)
                         }
                     }
                 }
                 .padding()
             }
-            .background(Color(red: 13/255, green: 17/255, blue: 23/255))
+            .background(theme.background)
             .navigationTitle("Lessons")
         }
         .frame(width: 500, height: 600)
@@ -95,15 +96,15 @@ struct LessonPickerView: View {
             } label: {
                 HStack {
                     Text("\(lesson.id).")
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(theme.textSecondary)
                         .frame(width: 30)
                     Text(lesson.title)
-                        .foregroundStyle(status == .locked ? .gray.opacity(0.5) : .white)
+                        .foregroundStyle(status == .locked ? theme.textSecondary.opacity(0.5) : theme.textPrimary)
                     Spacer()
                     if !lesson.newKeys.isEmpty {
                         Text(lesson.newKeys.map(String.init).joined(separator: " "))
                             .font(.caption.monospaced())
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(theme.textSecondary)
                     }
                     starsView(status)
                 }
@@ -117,12 +118,12 @@ struct LessonPickerView: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
-                .foregroundStyle(.gray)
+                .foregroundStyle(theme.textSecondary)
             }
         }
         .padding(.vertical, 6)
         .padding(.horizontal, 12)
-        .background(Color.white.opacity(status == .locked ? 0.02 : 0.05))
+        .background(theme.statsBackground.opacity(status == .locked ? 0.4 : 1.0))
         .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 
@@ -131,7 +132,7 @@ struct LessonPickerView: View {
         switch status {
         case .locked:
             Image(systemName: "lock.fill")
-                .foregroundStyle(.gray.opacity(0.3))
+                .foregroundStyle(theme.textSecondary.opacity(0.3))
         case .available:
             EmptyView()
         case .skipped:
@@ -143,7 +144,7 @@ struct LessonPickerView: View {
                 ForEach(1...3, id: \.self) { i in
                     Image(systemName: i <= stars ? "star.fill" : "star")
                         .font(.caption)
-                        .foregroundStyle(i <= stars ? .yellow : .gray.opacity(0.3))
+                        .foregroundStyle(i <= stars ? .yellow : theme.textSecondary.opacity(0.3))
                 }
             }
         }
