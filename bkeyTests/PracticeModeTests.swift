@@ -190,3 +190,23 @@ struct CustomTextNormalizationTests {
         #expect(result == "")
     }
 }
+
+// MARK: - Exact word count session
+
+struct ExactWordCountSessionTests {
+    @Test func sessionWithExactWordCountProducesCorrectCount() {
+        let gen = WordGenerator(words: ["alpha", "beta", "gamma", "delta", "echo"])
+        let session = TypingSession(wordGenerator: gen, errorMode: .continueOnError, targetWordCount: 10)
+        session.start()
+        let wordCount = session.targetText.split(separator: " ").count
+        #expect(wordCount == 10)
+    }
+
+    @Test func sessionWithoutExactWordCountProduces50() {
+        let gen = WordGenerator(words: ["alpha", "beta", "gamma"])
+        let session = TypingSession(wordGenerator: gen)
+        session.start()
+        let wordCount = session.targetText.split(separator: " ").count
+        #expect(wordCount == 50)
+    }
+}

@@ -35,17 +35,20 @@ class TypingSession {
     private let wordGenerator: WordGenerator
     let errorMode: ErrorMode
     private let customText: String?
+    private let targetWordCount: Int?
 
-    init(wordGenerator: WordGenerator = WordGenerator(), errorMode: ErrorMode = .continueOnError) {
+    init(wordGenerator: WordGenerator = WordGenerator(), errorMode: ErrorMode = .continueOnError, targetWordCount: Int? = nil) {
         self.wordGenerator = wordGenerator
         self.errorMode = errorMode
         self.customText = nil
+        self.targetWordCount = targetWordCount
     }
 
     init(customText: String, errorMode: ErrorMode = .continueOnError) {
         self.wordGenerator = WordGenerator(words: [])
         self.errorMode = errorMode
         self.customText = customText
+        self.targetWordCount = nil
     }
 
     func start() {
@@ -53,7 +56,8 @@ class TypingSession {
             words = custom.split(separator: " ").map(String.init)
             targetText = custom
         } else {
-            let batch = wordGenerator.generateBatch(count: 50)
+            let count = targetWordCount ?? 50
+            let batch = wordGenerator.generateBatch(count: count)
             words = batch
             targetText = batch.joined(separator: " ")
         }

@@ -191,7 +191,7 @@ struct AppStateTests {
 
     @Test func saveAndLoadSettingsRoundTrip() {
         let settingsKeys = ["showKeyboard", "showFingerLabels", "fontSize", "soundOnKeystroke",
-                            "soundOnError", "showLiveStats", "caretStyle", "errorMode"]
+                            "soundOnError", "showLiveStats", "caretStyle", "errorMode", "themeMode"]
         let defaults = UserDefaults.standard
 
         // Clean before
@@ -240,6 +240,79 @@ struct AppStateTests {
         let count = appState.keystrokeCount
         appState.handleCharacter("x", keyCode: 7) // session is complete
         #expect(appState.keystrokeCount == count)
+    }
+
+    // MARK: - Practice Mode
+
+    @Test func defaultPracticeModeIsEndless() {
+        let appState = AppState()
+        #expect(appState.practiceMode == .endless)
+    }
+
+    @Test func startFreeRunWithWordCountMode() {
+        let appState = AppState()
+        appState.practiceMode = .wordCount(count: .ten)
+        appState.startFreeRun()
+        let wordCount = appState.session.targetText.split(separator: " ").count
+        #expect(wordCount == 10)
+    }
+
+    @Test func startFreeRunWithCustomTextMode() {
+        let appState = AppState()
+        appState.practiceMode = .custom(text: "hello world foo")
+        appState.startFreeRun()
+        #expect(appState.session.targetText == "hello world foo")
+    }
+
+    @Test func startFreeRunWithTimedMode() {
+        let appState = AppState()
+        appState.practiceMode = .timed(duration: .sixty)
+        appState.startFreeRun()
+        #expect(!appState.session.targetText.isEmpty)
+        #expect(appState.session.state == .ready)
+    }
+
+    @Test func startFreeRunWithEndlessMode() {
+        let appState = AppState()
+        appState.practiceMode = .endless
+        appState.startFreeRun()
+        #expect(!appState.session.targetText.isEmpty)
+    }
+
+    @Test func restartFreeRunPreservesMode() {
+        let appState = AppState()
+        appState.practiceMode = .wordCount(count: .twentyFive)
+        appState.startFreeRun()
+        let wordCount = appState.session.targetText.split(separator: " ").count
+        #expect(wordCount == 25)
+        appState.startFreeRun()
+        let wordCount2 = appState.session.targetText.split(separator: " ").count
+        #expect(wordCount2 == 25)
+    }
+
+    @Test func timedModeCountdownStartsNil() {
+        let appState = AppState()
+        appState.practiceMode = .timed(duration: .thirty)
+        appState.startFreeRun()
+        #expect(appState.countdownRemaining == nil)
+    }
+
+    // MARK: - Theme Mode
+
+    @Test func defaultThemeModeIsDark() {
+        UserDefaults.standard.removeObject(forKey: "themeMode")
+        let appState = AppState()
+        #expect(appState.themeMode == .dark)
+    }
+
+    @Test func themeModePersistedToUserDefaults() {
+        UserDefaults.standard.removeObject(forKey: "themeMode")
+        let appState = AppState()
+        appState.themeMode = .oledDark
+        appState.saveSettings()
+        let loaded = AppState()
+        #expect(loaded.themeMode == .oledDark)
+        UserDefaults.standard.removeObject(forKey: "themeMode")
     }
 
     // MARK: - Session Completion
