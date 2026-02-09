@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var appState = AppState()
     @State private var eventMonitor: Any?
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack {
@@ -96,6 +97,7 @@ struct ContentView: View {
         .onDisappear {
             KeyEventHandler.removeMonitor(eventMonitor)
         }
+        .environment(\.appTheme, AppTheme.forMode(appState.themeMode, colorScheme: colorScheme))
         .frame(minWidth: 900, minHeight: 600)
     }
 
@@ -119,10 +121,21 @@ struct ContentView: View {
                 IntroductionExerciseView(exercise: exercise, appState: appState)
                 Spacer()
             } else {
+                // Mode picker (free run, ready state only)
+                if appState.lessonFlow == nil && appState.session.state == .ready {
+                    ModePickerView(appState: appState)
+                        .padding(.top, 12)
+                }
+
                 // Stats bar
                 if appState.showLiveStats {
-                    StatsBarView(session: appState.session, lesson: appState.currentLesson)
-                        .id(appState.session.keystrokes) // force refresh
+                    StatsBarView(
+                        session: appState.session,
+                        lesson: appState.currentLesson,
+                        practiceMode: appState.practiceMode,
+                        countdownRemaining: appState.countdownRemaining
+                    )
+                    .id(appState.session.keystrokes) // force refresh
                 }
 
                 Spacer()
@@ -184,7 +197,8 @@ struct ContentView: View {
             // Free run mode: show standard summary
             SessionSummaryView(
                 session: appState.session,
-                onTryAgain: {
+                practiceMode: appState.practiceMode,
+                onRestart: {
                     appState.startFreeRun()
                 },
                 onClose: {
