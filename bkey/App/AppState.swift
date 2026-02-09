@@ -39,6 +39,14 @@ class AppState {
     var caretStyle: CaretStyle = .line
     var showLiveStats: Bool = true
 
+    // Practice mode
+    var practiceMode: PracticeMode = .endless
+    var countdownRemaining: Int? = nil
+    private var countdownTimer: Timer? = nil
+
+    // Theme
+    var themeMode: ThemeMode = .dark
+
     // Target key highlighting
     var activeKeyCode: UInt16? = nil
     var lastPressedKeyCode: UInt16? = nil
@@ -62,6 +70,9 @@ class AppState {
         if let raw = defaults.string(forKey: "errorMode"), let mode = ErrorMode(rawValue: raw) {
             errorMode = mode
         }
+        if let raw = defaults.string(forKey: "themeMode"), let mode = ThemeMode(rawValue: raw) {
+            themeMode = mode
+        }
     }
 
     func saveSettings() {
@@ -74,6 +85,7 @@ class AppState {
         defaults.set(showLiveStats, forKey: "showLiveStats")
         defaults.set(caretStyle.rawValue, forKey: "caretStyle")
         defaults.set(errorMode.rawValue, forKey: "errorMode")
+        defaults.set(themeMode.rawValue, forKey: "themeMode")
     }
 
     // Current lesson (if in lesson mode)
@@ -88,24 +100,49 @@ class AppState {
         mode = .freeRun
         lessonFlow = nil
         showExerciseTransition = false
-        let words: [String]
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+        countdownRemaining = nil
+
+        switch practiceMode {
+        case .endless:
+            let words = generateAdaptiveWords(count: 50)
+            session = TypingSession(wordGenerator: WordGenerator(words: words), errorMode: errorMode)
+        case .timed:
+            // Timed: generate lots of words, timer will end the session
+            let words = generateAdaptiveWords(count: 200)
+            session = TypingSession(wordGenerator: WordGenerator(words: words), errorMode: errorMode)
+        case .wordCount(let option):
+            let words = generateAdaptiveWords(count: option.rawValue)
+            session = TypingSession(wordGenerator: WordGenerator(words: words), errorMode: errorMode, targetWordCount: option.rawValue)
+        case .custom(let text):
+            let normalized = PracticeMode.normalizeCustomText(text)
+            guard !normalized.isEmpty else {
+                session = TypingSession()
+                return
+            }
+            session = TypingSession(customText: normalized, errorMode: errorMode)
+        }
+
+        session.start()
+        showSessionSummary = false
+        selectedTab = .freeRun
+        updateActiveKeyCode()
+    }
+
+    private func generateAdaptiveWords(count: Int) -> [String] {
         if !proficiencyTracker.proficiencies.isEmpty {
             let weakChars = proficiencyTracker.weakestCharacters(count: 5)
-            let allWords = WordGenerator().generateBatch(count: 200)
-            words = AdaptiveWordSelector.selectWords(
-                count: 50,
+            let allWords = WordGenerator().generateBatch(count: max(count * 4, 200))
+            return AdaptiveWordSelector.selectWords(
+                count: count,
                 allWords: allWords,
                 weakChars: weakChars,
                 proficiencies: proficiencyTracker.proficiencies
             )
         } else {
-            words = WordGenerator().generateBatch(count: 50)
+            return WordGenerator().generateBatch(count: count)
         }
-        session = TypingSession(wordGenerator: WordGenerator(words: words), errorMode: errorMode)
-        session.start()
-        showSessionSummary = false
-        selectedTab = .freeRun
-        updateActiveKeyCode()
     }
 
     func startLesson(id: Int) {
@@ -174,6 +211,12 @@ class AppState {
 
         guard session.state == .ready || session.state == .active else { return }
 
+        // Start timed countdown on first keystroke
+        if case .timed(let duration) = practiceMode,
+           session.state == .ready || (session.state == .active && countdownRemaining == nil) {
+            startCountdown(seconds: duration.rawValue)
+        }
+
         lastPressedKeyCode = keyCode
         let expectedChar = session.currentCharacter
         session.processCharacter(character)
@@ -197,8 +240,29 @@ class AppState {
 
     func handleEscape() {
         if session.state == .active {
+            countdownTimer?.invalidate()
+            countdownTimer = nil
+            countdownRemaining = nil
             session.endSession()
             handleSessionComplete()
+        }
+    }
+
+    private func startCountdown(seconds: Int) {
+        countdownRemaining = seconds
+        countdownTimer?.invalidate()
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            if let remaining = self.countdownRemaining, remaining > 0 {
+                self.countdownRemaining = remaining - 1
+            }
+            if self.countdownRemaining == 0 {
+                self.countdownTimer?.invalidate()
+                self.countdownTimer = nil
+                self.session.forceComplete()
+                self.handleSessionComplete()
+                self.updateActiveKeyCode()
+            }
         }
     }
 
