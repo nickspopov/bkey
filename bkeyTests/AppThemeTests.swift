@@ -43,4 +43,20 @@ struct AppThemeTests {
         let mode = ThemeMode(rawValue: "dark")
         #expect(mode == .dark)
     }
+
+    @Test func darkThemeIsDark() {
+        #expect(AppTheme.dark.isDark == true)
+    }
+
+    @Test func lightThemeIsNotDark() {
+        #expect(AppTheme.light.isDark == false)
+    }
+
+    @Test func oledDarkThemeIsDark() {
+        #expect(AppTheme.oledDark.isDark == true)
+    }
+
+    @Test func lightThemeScrimIsNotBlack() {
+        #expect(AppTheme.light.scrimColor != AppTheme.dark.scrimColor)
+    }
 }
