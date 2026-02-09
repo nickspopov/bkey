@@ -2,8 +2,10 @@ import SwiftUI
 
 struct SessionSummaryView: View {
     let session: TypingSession
-    let onTryAgain: () -> Void
+    let practiceMode: PracticeMode
+    let onRestart: () -> Void
     let onClose: () -> Void
+    @Environment(\.appTheme) private var theme
 
     var body: some View {
         ZStack {
@@ -11,9 +13,14 @@ struct SessionSummaryView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 24) {
-                Text("Session Complete")
-                    .font(.title2.bold())
-                    .foregroundStyle(.white)
+                VStack(spacing: 4) {
+                    Text("Session Complete")
+                        .font(.title2.bold())
+                        .foregroundStyle(theme.textPrimary)
+                    Text(practiceMode.displayName)
+                        .font(.caption)
+                        .foregroundStyle(theme.textSecondary)
+                }
 
                 LazyVGrid(columns: [
                     GridItem(.flexible()),
@@ -29,11 +36,11 @@ struct SessionSummaryView: View {
                 }
 
                 HStack(spacing: 16) {
-                    Button("Try Again") {
-                        onTryAgain()
+                    Button("Restart") {
+                        onRestart()
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(Color(red: 99/255, green: 179/255, blue: 237/255))
+                    .tint(theme.accent)
 
                     Button("Close") {
                         onClose()
@@ -45,7 +52,7 @@ struct SessionSummaryView: View {
             .frame(width: 400)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(red: 22/255, green: 27/255, blue: 34/255))
+                    .fill(theme.surfaceBackground)
                     .shadow(radius: 20)
             )
         }
@@ -55,10 +62,10 @@ struct SessionSummaryView: View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.system(size: 28, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.textPrimary)
             Text(label)
                 .font(.caption)
-                .foregroundStyle(.gray)
+                .foregroundStyle(theme.textSecondary)
         }
         .frame(maxWidth: .infinity)
     }

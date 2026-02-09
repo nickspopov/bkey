@@ -3,6 +3,9 @@ import SwiftUI
 struct StatsBarView: View {
     let session: TypingSession
     var lesson: Lesson? = nil
+    var practiceMode: PracticeMode = .endless
+    var countdownRemaining: Int? = nil
+    @Environment(\.appTheme) private var theme
 
     var body: some View {
         VStack(spacing: 4) {
@@ -18,18 +21,41 @@ struct StatsBarView: View {
                     label: "accuracy",
                     suffix: "%"
                 )
-                statItem(
-                    icon: "exclamationmark.circle",
-                    value: "\(session.errors)",
-                    label: "typos"
-                )
+
+                // Mode-specific stat
+                switch practiceMode {
+                case .timed:
+                    statItem(
+                        icon: "timer",
+                        value: countdownRemaining.map { "\($0)" } ?? "--",
+                        label: "seconds left"
+                    )
+                case .wordCount(let option):
+                    statItem(
+                        icon: "textformat.123",
+                        value: "\(wordsCompleted)/\(option.rawValue)",
+                        label: "words"
+                    )
+                case .custom:
+                    statItem(
+                        icon: "character.cursor.ibeam",
+                        value: "\(session.currentIndex)/\(session.targetText.count)",
+                        label: "characters"
+                    )
+                case .endless:
+                    statItem(
+                        icon: "exclamationmark.circle",
+                        value: "\(session.errors)",
+                        label: "typos"
+                    )
+                }
             }
 
             // Gate criteria (lesson mode only)
             if let lesson = lesson {
                 Text("Target: \(lesson.gateWPM) WPM, \(Int(lesson.gateAccuracy))% accuracy")
                     .font(.system(size: 11))
-                    .foregroundStyle(.gray.opacity(0.7))
+                    .foregroundStyle(theme.textSecondary.opacity(0.7))
             }
         }
         .padding(.vertical, 20)
@@ -39,23 +65,27 @@ struct StatsBarView: View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundStyle(.gray)
+                .foregroundStyle(theme.textSecondary)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
                     Text(value)
                         .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(theme.textPrimary)
                     if !suffix.isEmpty {
                         Text(suffix)
                             .font(.system(size: 18, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.7))
+                            .foregroundStyle(theme.textPrimary.opacity(0.7))
                     }
                 }
                 Text(label)
                     .font(.caption)
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(theme.textSecondary)
             }
         }
+    }
+
+    private var wordsCompleted: Int {
+        session.currentWordIndex
     }
 
     private var currentWPM: Int? {
