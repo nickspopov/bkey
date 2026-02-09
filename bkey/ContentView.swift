@@ -4,7 +4,10 @@ struct ContentView: View {
     @State private var appState = AppState()
     @State private var eventMonitor: Any?
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.appTheme) private var theme
+
+    private var theme: AppTheme {
+        AppTheme.forMode(appState.themeMode, colorScheme: colorScheme)
+    }
 
     var body: some View {
         ZStack {
