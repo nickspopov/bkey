@@ -17,6 +17,8 @@ struct AppTheme: Equatable, Sendable {
     let keyBackground: Color
     let keyBorder: Color
     let statsBackground: Color
+    let isDark: Bool
+    let scrimColor: Color
 
     static let dark = AppTheme(
         background: Color(red: 13/255, green: 17/255, blue: 23/255),
@@ -27,7 +29,9 @@ struct AppTheme: Equatable, Sendable {
         accent: Color(red: 99/255, green: 179/255, blue: 237/255),
         keyBackground: Color.white.opacity(0.1),
         keyBorder: Color.white.opacity(0.1),
-        statsBackground: Color.white.opacity(0.03)
+        statsBackground: Color.white.opacity(0.03),
+        isDark: true,
+        scrimColor: Color.black.opacity(0.6)
     )
 
     static let light = AppTheme(
@@ -39,7 +43,9 @@ struct AppTheme: Equatable, Sendable {
         accent: Color(red: 49/255, green: 130/255, blue: 206/255),
         keyBackground: Color(red: 237/255, green: 242/255, blue: 247/255),
         keyBorder: Color(red: 203/255, green: 213/255, blue: 224/255),
-        statsBackground: Color(red: 237/255, green: 242/255, blue: 247/255)
+        statsBackground: Color(red: 237/255, green: 242/255, blue: 247/255),
+        isDark: false,
+        scrimColor: Color.black.opacity(0.3)
     )
 
     static let oledDark = AppTheme(
@@ -51,7 +57,9 @@ struct AppTheme: Equatable, Sendable {
         accent: Color(red: 99/255, green: 179/255, blue: 237/255),
         keyBackground: Color(red: 10/255, green: 10/255, blue: 10/255),
         keyBorder: Color(red: 26/255, green: 26/255, blue: 26/255),
-        statsBackground: Color(red: 5/255, green: 5/255, blue: 5/255)
+        statsBackground: Color(red: 5/255, green: 5/255, blue: 5/255),
+        isDark: true,
+        scrimColor: Color.black.opacity(0.6)
     )
 
     static func forMode(_ mode: ThemeMode, colorScheme: ColorScheme) -> AppTheme {
