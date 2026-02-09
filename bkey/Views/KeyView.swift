@@ -23,6 +23,14 @@ struct KeyView: View {
             RoundedRectangle(cornerRadius: 6)
                 .fill(backgroundFill)
                 .overlay(
+                    Group {
+                        if !theme.isDark && state == .idle {
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(definition.finger.color.opacity(0.12))
+                        }
+                    }
+                )
+                .overlay(
                     RoundedRectangle(cornerRadius: 6)
                         .stroke(theme.keyBorder, lineWidth: 0.5)
                 )
@@ -63,9 +71,13 @@ struct KeyView: View {
     private var backgroundFill: Color {
         switch state {
         case .idle:
-            definition.finger.color.opacity(0.2)
+            if theme.isDark {
+                definition.finger.color.opacity(0.2)
+            } else {
+                theme.keyBackground
+            }
         case .target:
-            definition.finger.color.opacity(0.8)
+            definition.finger.color.opacity(theme.isDark ? 0.8 : 0.5)
         case .pressedCorrect:
             theme.textPrimary.opacity(0.6)
         case .pressedIncorrect:
@@ -74,6 +86,6 @@ struct KeyView: View {
     }
 
     private var glowColor: Color {
-        state == .target ? definition.finger.color.opacity(0.5) : .clear
+        state == .target ? definition.finger.color.opacity(theme.isDark ? 0.5 : 0.3) : .clear
     }
 }
