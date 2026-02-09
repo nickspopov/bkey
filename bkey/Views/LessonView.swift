@@ -10,6 +10,7 @@ struct LessonResultView: View {
     let onClose: () -> Void
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.appTheme) private var theme
 
     var body: some View {
         ZStack {
@@ -20,7 +21,7 @@ struct LessonResultView: View {
                 VStack(spacing: 20) {
                     Text("Lesson \(lesson.id): \(lesson.title)")
                         .font(.title2.bold())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(theme.textPrimary)
 
                     // Star display (based on speed challenge result)
                     let stars = starRating
@@ -53,26 +54,26 @@ struct LessonResultView: View {
 
                     // Per-exercise breakdown
                     if lessonFlow.exerciseResults.count > 1 {
-                        Divider().background(Color.white.opacity(0.2))
+                        Divider().background(theme.textSecondary.opacity(0.2))
 
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Exercise Breakdown")
                                 .font(.caption.bold())
-                                .foregroundStyle(.gray)
+                                .foregroundStyle(theme.textSecondary)
 
                             ForEach(lessonFlow.exerciseResults, id: \.exerciseId) { result in
                                 HStack {
                                     Text(result.exerciseType.title)
                                         .font(.caption)
-                                        .foregroundStyle(.white.opacity(0.8))
+                                        .foregroundStyle(theme.textPrimary.opacity(0.8))
                                     Spacer()
                                     if result.exerciseType.isTypingExercise {
                                         Text("\(Int(result.wpm)) WPM")
                                             .font(.caption)
-                                            .foregroundStyle(.white.opacity(0.6))
+                                            .foregroundStyle(theme.textPrimary.opacity(0.6))
                                         Text("\(Int(result.accuracy))%")
                                             .font(.caption)
-                                            .foregroundStyle(.white.opacity(0.6))
+                                            .foregroundStyle(theme.textPrimary.opacity(0.6))
                                     }
                                 }
                             }
@@ -97,7 +98,7 @@ struct LessonResultView: View {
             .frame(maxHeight: 500)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(red: 22/255, green: 27/255, blue: 34/255))
+                    .fill(theme.surfaceBackground)
                     .shadow(radius: 20)
             )
             .onAppear { saveLessonResult(stars: starRating) }
@@ -109,10 +110,10 @@ struct LessonResultView: View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.system(size: 28, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.textPrimary)
             Text(label)
                 .font(.caption)
-                .foregroundStyle(.gray)
+                .foregroundStyle(theme.textSecondary)
         }
     }
 
