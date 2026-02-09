@@ -6,6 +6,8 @@ struct ExerciseTransitionView: View {
     let lastResult: ExerciseResult?
     let onContinue: () -> Void
 
+    @Environment(\.appTheme) private var theme
+
     var body: some View {
         ZStack {
             Color.black.opacity(0.6)
@@ -20,7 +22,7 @@ struct ExerciseTransitionView: View {
 
                     Text(completedExercise.title)
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(theme.textPrimary)
 
                     Text("Complete")
                         .font(.caption)
@@ -36,7 +38,7 @@ struct ExerciseTransitionView: View {
                 }
 
                 Divider()
-                    .background(Color.white.opacity(0.2))
+                    .background(theme.textSecondary.opacity(0.2))
                     .padding(.horizontal, 40)
 
                 // Next exercise info
@@ -44,13 +46,13 @@ struct ExerciseTransitionView: View {
                     VStack(spacing: 6) {
                         Text("Next:")
                             .font(.caption)
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(theme.textSecondary)
                         Text(next.title)
                             .font(.title3.bold())
-                            .foregroundStyle(.white)
+                            .foregroundStyle(theme.textPrimary)
                         Text(next.instruction)
                             .font(.caption)
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(theme.textSecondary)
                             .multilineTextAlignment(.center)
                     }
                 }
@@ -59,14 +61,14 @@ struct ExerciseTransitionView: View {
                     onContinue()
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(Color(red: 99/255, green: 179/255, blue: 237/255))
+                .tint(theme.accent)
                 .padding(.top, 8)
             }
             .padding(32)
             .frame(width: 360)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(red: 22/255, green: 27/255, blue: 34/255))
+                    .fill(theme.surfaceBackground)
                     .shadow(radius: 20)
             )
         }
@@ -77,10 +79,10 @@ struct ExerciseTransitionView: View {
         VStack(spacing: 2) {
             Text(value)
                 .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.textPrimary)
             Text(label)
                 .font(.caption2)
-                .foregroundStyle(.gray)
+                .foregroundStyle(theme.textSecondary)
         }
     }
 }

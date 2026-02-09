@@ -5,6 +5,8 @@ struct ExerciseProgressBar: View {
     let currentIndex: Int
     let completedCount: Int
 
+    @Environment(\.appTheme) private var theme
+
     var body: some View {
         HStack(spacing: 12) {
             ForEach(exercises) { exercise in
@@ -18,10 +20,10 @@ struct ExerciseProgressBar: View {
                         if exercise.id < completedCount {
                             Image(systemName: "checkmark")
                                 .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(theme.textPrimary)
                         } else if exercise.id == currentIndex {
                             Circle()
-                                .fill(.white)
+                                .fill(theme.textPrimary)
                                 .frame(width: 8, height: 8)
                         }
                     }
@@ -29,7 +31,7 @@ struct ExerciseProgressBar: View {
                     // Exercise title
                     Text(exercise.title)
                         .font(.system(size: 9))
-                        .foregroundStyle(exercise.id == currentIndex ? .white : .gray)
+                        .foregroundStyle(exercise.id == currentIndex ? theme.textPrimary : theme.textSecondary)
                         .lineLimit(1)
                 }
             }
@@ -42,9 +44,9 @@ struct ExerciseProgressBar: View {
         if id < completedCount {
             return Color.green.opacity(0.7)
         } else if id == currentIndex {
-            return Color(red: 99/255, green: 179/255, blue: 237/255) // #63B3ED
+            return theme.accent
         } else {
-            return Color.white.opacity(0.15)
+            return theme.textSecondary.opacity(0.15)
         }
     }
 }
