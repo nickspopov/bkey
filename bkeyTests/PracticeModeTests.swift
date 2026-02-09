@@ -65,3 +65,128 @@ struct PracticeModeTests {
         #expect(PracticeMode.custom(text: "abc").displayName == "Custom Text")
     }
 }
+
+// MARK: - TypingSession forceComplete
+
+struct ForceCompleteTests {
+    @Test func forceCompleteTransitionsActiveToComplete() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["hello"]))
+        session.start()
+        session.processCharacter("h") // activate
+        #expect(session.state == .active)
+        session.forceComplete()
+        #expect(session.state == .complete)
+        #expect(session.endTime != nil)
+    }
+
+    @Test func forceCompleteFromReadyDoesNothing() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["hello"]))
+        session.start()
+        #expect(session.state == .ready)
+        session.forceComplete()
+        #expect(session.state == .ready)
+        #expect(session.endTime == nil)
+    }
+
+    @Test func forceCompleteFromCompleteDoesNothing() {
+        let session = TypingSession(wordGenerator: WordGenerator(words: ["a"]))
+        session.start()
+        for char in session.targetText {
+            session.processCharacter(char)
+        }
+        #expect(session.state == .complete)
+        let originalEnd = session.endTime
+        session.forceComplete()
+        #expect(session.endTime == originalEnd)
+    }
+}
+
+// MARK: - TypingSession custom text
+
+struct CustomTextSessionTests {
+    @Test func sessionWithCustomTextUsesDirectText() {
+        let session = TypingSession(customText: "hello world")
+        session.start()
+        #expect(session.targetText == "hello world")
+        #expect(session.characterStates.count == 11)
+    }
+
+    @Test func sessionWithCustomTextCompletesNormally() {
+        let session = TypingSession(customText: "ab")
+        session.start()
+        session.processCharacter("a")
+        session.processCharacter("b")
+        #expect(session.state == .complete)
+    }
+}
+
+// MARK: - WordGenerator exact count
+
+struct WordGeneratorExactCountTests {
+    @Test func generateExactCountReturnsExactWords() {
+        let gen = WordGenerator(words: ["alpha", "beta", "gamma", "delta"])
+        let result = gen.generateExact(count: 10)
+        #expect(result.count == 10)
+    }
+
+    @Test func generateExactCountNoRepeats() {
+        let gen = WordGenerator(words: ["a", "b", "c"])
+        let result = gen.generateExact(count: 20)
+        for i in 1..<result.count {
+            #expect(result[i] != result[i-1], "Repeat at index \(i)")
+        }
+    }
+
+    @Test func generateExactCountSingleWordStillWorks() {
+        let gen = WordGenerator(words: ["only"])
+        let result = gen.generateExact(count: 5)
+        #expect(result.count == 5)
+        #expect(result.allSatisfy { $0 == "only" })
+    }
+
+    @Test func generateExactCountEmptyReturnsEmpty() {
+        let gen = WordGenerator(words: [])
+        let result = gen.generateExact(count: 5)
+        #expect(result.isEmpty)
+    }
+}
+
+// MARK: - Custom text normalization
+
+struct CustomTextNormalizationTests {
+    @Test func normalizeCollapseMultipleSpaces() {
+        let result = PracticeMode.normalizeCustomText("hello   world")
+        #expect(result == "hello world")
+    }
+
+    @Test func normalizeNewlinesToSpaces() {
+        let result = PracticeMode.normalizeCustomText("hello\nworld")
+        #expect(result == "hello world")
+    }
+
+    @Test func normalizeTrimWhitespace() {
+        let result = PracticeMode.normalizeCustomText("  hello world  ")
+        #expect(result == "hello world")
+    }
+
+    @Test func normalizeTabsToSpaces() {
+        let result = PracticeMode.normalizeCustomText("hello\t\tworld")
+        #expect(result == "hello world")
+    }
+
+    @Test func normalizeTruncatesAt10000Chars() {
+        let longText = String(repeating: "a ", count: 6000) // 12000 chars
+        let result = PracticeMode.normalizeCustomText(longText)
+        #expect(result.count <= 10000)
+    }
+
+    @Test func normalizeEmptyTextReturnsEmpty() {
+        let result = PracticeMode.normalizeCustomText("")
+        #expect(result == "")
+    }
+
+    @Test func normalizeWhitespaceOnlyReturnsEmpty() {
+        let result = PracticeMode.normalizeCustomText("   \n\t  ")
+        #expect(result == "")
+    }
+}

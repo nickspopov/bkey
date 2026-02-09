@@ -34,16 +34,29 @@ class TypingSession {
 
     private let wordGenerator: WordGenerator
     let errorMode: ErrorMode
+    private let customText: String?
 
     init(wordGenerator: WordGenerator = WordGenerator(), errorMode: ErrorMode = .continueOnError) {
         self.wordGenerator = wordGenerator
         self.errorMode = errorMode
+        self.customText = nil
+    }
+
+    init(customText: String, errorMode: ErrorMode = .continueOnError) {
+        self.wordGenerator = WordGenerator(words: [])
+        self.errorMode = errorMode
+        self.customText = customText
     }
 
     func start() {
-        let batch = wordGenerator.generateBatch(count: 50)
-        words = batch
-        targetText = batch.joined(separator: " ")
+        if let custom = customText {
+            words = custom.split(separator: " ").map(String.init)
+            targetText = custom
+        } else {
+            let batch = wordGenerator.generateBatch(count: 50)
+            words = batch
+            targetText = batch.joined(separator: " ")
+        }
         characterStates = Array(repeating: .pending, count: targetText.count)
         currentIndex = 0
         keystrokes = 0
@@ -127,6 +140,12 @@ class TypingSession {
     }
 
     func endSession() {
+        guard state == .active else { return }
+        state = .complete
+        endTime = Date()
+    }
+
+    func forceComplete() {
         guard state == .active else { return }
         state = .complete
         endTime = Date()
