@@ -14,6 +14,21 @@ enum PracticeMode: Equatable, Sendable {
         case .custom: "Custom Text"
         }
     }
+
+    static func normalizeCustomText(_ text: String) -> String {
+        let replaced = text
+            .replacingOccurrences(of: "\r\n", with: " ")
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\t", with: " ")
+        // Collapse multiple spaces
+        let components = replaced.split(separator: " ")
+        let collapsed = components.joined(separator: " ")
+        // Truncate to 10000 chars
+        if collapsed.count > 10000 {
+            return String(collapsed.prefix(10000))
+        }
+        return collapsed
+    }
 }
 
 enum TimedDuration: Int, CaseIterable, Sendable {

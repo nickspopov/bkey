@@ -44,4 +44,20 @@ struct WordGenerator: Sendable {
         }
         return result
     }
+
+    /// Generate exactly N words (no extras). Same no-repeat logic.
+    func generateExact(count: Int) -> [String] {
+        guard !words.isEmpty else { return [] }
+        var result: [String] = []
+        var lastWord = ""
+        for _ in 0..<count {
+            var word: String
+            repeat {
+                word = words.randomElement()!
+            } while word == lastWord && words.count > 1
+            result.append(word)
+            lastWord = word
+        }
+        return result
+    }
 }
