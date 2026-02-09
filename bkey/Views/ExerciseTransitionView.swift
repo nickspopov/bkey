@@ -10,7 +10,7 @@ struct ExerciseTransitionView: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.6)
+            theme.scrimColor
                 .ignoresSafeArea()
 
             VStack(spacing: 20) {
