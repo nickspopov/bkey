@@ -5,13 +5,14 @@ import SwiftData
 struct ProgressDashboardView: View {
     @Query(sort: \SessionRecord.date) private var sessions: [SessionRecord]
     @Query private var proficiencies: [KeyProficiencyRecord]
+    @Environment(\.appTheme) private var theme
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 Text("Progress")
                     .font(.title.bold())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(theme.textPrimary)
 
                 // WPM Over Time
                 if !validSessions.isEmpty {
@@ -20,7 +21,7 @@ struct ProgressDashboardView: View {
                     } header: {
                         Text("WPM Over Time")
                             .font(.headline)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(theme.textPrimary)
                     }
                 }
 
@@ -33,12 +34,12 @@ struct ProgressDashboardView: View {
                 } header: {
                     Text("Key Proficiency")
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(theme.textPrimary)
                 }
             }
             .padding()
         }
-        .background(Color(red: 13/255, green: 17/255, blue: 23/255))
+        .background(theme.background)
         .frame(width: 600, height: 700)
         .accessibilityIdentifier("progressDashboard")
     }
@@ -52,7 +53,7 @@ struct ProgressDashboardView: View {
                         x: .value("Date", session.date),
                         y: .value("Gross WPM", session.wpm)
                     )
-                    .foregroundStyle(Color(red: 99/255, green: 179/255, blue: 237/255))
+                    .foregroundStyle(theme.accent)
                     .symbol(Circle())
 
                     LineMark(
@@ -78,28 +79,28 @@ struct ProgressDashboardView: View {
                 AxisMarks(values: .automatic) { _ in
                     AxisGridLine()
                     AxisValueLabel()
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(theme.textSecondary)
                 }
             }
             .chartYAxis {
                 AxisMarks { _ in
                     AxisGridLine()
                     AxisValueLabel()
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(theme.textSecondary)
                 }
             }
             .frame(height: 200)
 
             // Chart legend
             HStack(spacing: 16) {
-                legendItem(color: Color(red: 99/255, green: 179/255, blue: 237/255), label: "Gross WPM")
+                legendItem(color: theme.accent, label: "Gross WPM")
                 legendItem(color: Color(red: 104/255, green: 211/255, blue: 145/255), label: "Net WPM")
                 legendItem(color: .orange, label: "7-Day Avg", dashed: true)
             }
             .font(.caption2)
         }
         .padding()
-        .background(Color.white.opacity(0.03))
+        .background(theme.statsBackground)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
@@ -121,7 +122,7 @@ struct ProgressDashboardView: View {
                     .frame(width: 6, height: 6)
             }
             Text(label)
-                .foregroundStyle(.gray)
+                .foregroundStyle(theme.textSecondary)
         }
     }
 
@@ -162,14 +163,14 @@ struct ProgressDashboardView: View {
         VStack(spacing: 4) {
             Text(value)
                 .font(.system(size: 22, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.textPrimary)
             Text(label)
                 .font(.caption)
-                .foregroundStyle(.gray)
+                .foregroundStyle(theme.textSecondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(Color.white.opacity(0.03))
+        .background(theme.statsBackground)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }

@@ -3,12 +3,13 @@ import SwiftUI
 struct IntroductionExerciseView: View {
     let exercise: LessonExercise
     let appState: AppState
+    @Environment(\.appTheme) private var theme
 
     var body: some View {
         VStack(spacing: 24) {
             Text("New Keys")
                 .font(.title2.bold())
-                .foregroundStyle(.white)
+                .foregroundStyle(theme.textPrimary)
 
             // Key cards showing new keys and their finger assignments
             HStack(spacing: 20) {
@@ -17,7 +18,7 @@ struct IntroductionExerciseView: View {
                         // Key label
                         Text(String(mapping.character).uppercased())
                             .font(.system(size: 36, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(theme.textPrimary)
                             .frame(width: 72, height: 72)
                             .background(
                                 RoundedRectangle(cornerRadius: 12)
@@ -35,7 +36,7 @@ struct IntroductionExerciseView: View {
 
                         Text(fingerName(mapping.finger))
                             .font(.caption)
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(theme.textSecondary)
                     }
                 }
             }
@@ -57,7 +58,7 @@ struct IntroductionExerciseView: View {
 
             Text("Press Space to continue")
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.gray)
+                .foregroundStyle(theme.textSecondary)
                 .padding(.top, 8)
         }
         .padding(.horizontal, 40)
