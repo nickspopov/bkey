@@ -3,6 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @Bindable var appState: AppState
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.appTheme) private var theme
 
     var body: some View {
         Form {
@@ -16,6 +17,17 @@ struct SettingsView: View {
                     }
                 }
                 Toggle("Show Live Stats", isOn: $appState.showLiveStats)
+                Picker("Theme", selection: $appState.themeMode) {
+                    ForEach(ThemeMode.allCases, id: \.self) { mode in
+                        HStack {
+                            Circle()
+                                .fill(themePreviewColor(mode))
+                                .frame(width: 12, height: 12)
+                            Text(themeDisplayName(mode))
+                        }
+                        .tag(mode)
+                    }
+                }
             }
 
             Section("Sound") {
@@ -38,6 +50,24 @@ struct SettingsView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done") { dismiss() }
             }
+        }
+    }
+
+    private func themeDisplayName(_ mode: ThemeMode) -> String {
+        switch mode {
+        case .system: "System"
+        case .dark: "Dark"
+        case .light: "Light"
+        case .oledDark: "OLED Dark"
+        }
+    }
+
+    private func themePreviewColor(_ mode: ThemeMode) -> Color {
+        switch mode {
+        case .system: Color.gray
+        case .dark: Color(red: 13/255, green: 17/255, blue: 23/255)
+        case .light: Color.white
+        case .oledDark: Color.black
         }
     }
 }
