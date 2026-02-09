@@ -4,11 +4,12 @@ struct ContentView: View {
     @State private var appState = AppState()
     @State private var eventMonitor: Any?
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.appTheme) private var theme
 
     var body: some View {
         ZStack {
             // Background
-            Color(red: 13/255, green: 17/255, blue: 23/255) // #0D1117
+            theme.background
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -25,12 +26,12 @@ struct ContentView: View {
                             } label: {
                                 Text(tab.rawValue)
                                     .font(.system(size: 13, weight: appState.selectedTab == tab ? .semibold : .regular))
-                                    .foregroundStyle(appState.selectedTab == tab ? .white : .gray)
+                                    .foregroundStyle(appState.selectedTab == tab ? theme.textPrimary : theme.textSecondary)
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 6)
                                     .background(
                                         appState.selectedTab == tab
-                                            ? Color.white.opacity(0.1)
+                                            ? theme.accent.opacity(0.2)
                                             : Color.clear
                                     )
                                     .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -47,7 +48,7 @@ struct ContentView: View {
                     } label: {
                         Image(systemName: "gearshape.fill")
                             .font(.title3)
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(theme.textSecondary)
                     }
                     .buttonStyle(.plain)
                     .padding(.trailing, 16)
@@ -144,7 +145,7 @@ struct ContentView: View {
                 if appState.lessonFlow != nil {
                     let total = max(appState.session.targetText.count, 1)
                     ProgressView(value: Double(appState.session.currentIndex), total: Double(total))
-                        .tint(Color(red: 99/255, green: 179/255, blue: 237/255))
+                        .tint(theme.accent)
                         .scaleEffect(y: 1.5) // 3px height
                         .padding(.horizontal, 40)
                         .animation(.easeOut(duration: 0.1), value: appState.session.currentIndex)
