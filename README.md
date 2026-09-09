@@ -1,5 +1,7 @@
 # bkey
 
+[![CI](https://github.com/nickspopov/bkey/actions/workflows/ci.yml/badge.svg)](https://github.com/nickspopov/bkey/actions/workflows/ci.yml)
+
 A native macOS touch-typing tutor. Swift + SwiftUI, zero third-party dependencies.
 
 bkey doesn't just count your WPM — it tracks per-key proficiency and feeds your weakest keys back into the next practice set, so every session targets what you actually struggle with.
@@ -57,7 +59,7 @@ xcodebuild -project bkey.xcodeproj -scheme bkey -configuration Debug \
 open build/Build/Products/Debug/bkey.app
 ```
 
-Or open `bkey.xcodeproj` in Xcode and press ⌘R.
+Or open `bkey.xcodeproj` in Xcode, pick your signing team under *Signing & Capabilities*, and press ⌘R.
 
 ## Tests
 
@@ -90,3 +92,7 @@ Keyboard input: `KeyEventHandler` (NSEvent local monitor) → `AppState.handleCh
 - `Esc` — end the current session and show the summary
 - `Space` — continue from a lesson introduction
 - `Backspace` — correct within the current word
+
+## License
+
+[MIT](LICENSE)

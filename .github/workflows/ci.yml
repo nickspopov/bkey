@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode 26
+        run: sudo xcode-select -s /Applications/Xcode_26.app
+      - name: Build
+        run: |
+          xcodebuild -project bkey.xcodeproj -scheme bkey -configuration Debug \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - name: Unit tests
+        run: |
+          xcodebuild -project bkey.xcodeproj -scheme bkey -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO test -only-testing:bkeyTests

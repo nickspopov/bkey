@@ -1,4 +1,4 @@
-# TouchType â€” Touch Typing Tutor for macOS
+# bkey — Touch Typing Tutor for macOS
 ## Technical Documentation & Product Requirements
 
 **Version:** 1.0 Draft  
@@ -10,15 +10,15 @@
 
 ## 1. Product Vision
 
-TouchType is a native macOS touch typing tutor that teaches and reinforces proper finger placement through adaptive practice sessions, finger-zone color-coded keyboard visualization, and real-time performance metrics. The app combines the modern "MonkeyType-style" text display with a structured learning progression, wrapped in a polished dark-themed macOS interface.
+bkey is a native macOS touch typing tutor that teaches and reinforces proper finger placement through adaptive practice sessions, finger-zone color-coded keyboard visualization, and real-time performance metrics. The app combines the modern "MonkeyType-style" text display with a structured learning progression, wrapped in a polished dark-themed macOS interface.
 
 ### 1.1 Design Reference
 
 The visual design follows a dark-theme aesthetic (see reference screenshot) with three primary zones stacked vertically:
 
-1. **Stats Bar** (top) â€” WPM, Accuracy %, and Typo count displayed with iconography
-2. **Text Display Area** (middle) â€” single-line scrolling text with a blinking caret, typed characters in light color, untyped characters in subdued gray
-3. **On-Screen Keyboard** (bottom 40%) â€” full keyboard visualization with finger-zone color mapping using a cool-toned gradient (teals, blues, purples) and semi-transparent hand overlay guides
+1. **Stats Bar** (top) — WPM, Accuracy %, and Typo count displayed with iconography
+2. **Text Display Area** (middle) — single-line scrolling text with a blinking caret, typed characters in light color, untyped characters in subdued gray
+3. **On-Screen Keyboard** (bottom 40%) — full keyboard visualization with finger-zone color mapping using a cool-toned gradient (teals, blues, purples) and semi-transparent hand overlay guides
 
 The window includes a settings gear icon (top-right) and standard macOS traffic-light controls.
 
@@ -26,25 +26,25 @@ The window includes a settings gear icon (top-right) and standard macOS traffic-
 
 ## 2. Phased Delivery Plan
 
-### Phase 1 â€” MVP (Free-Run Mode Only)
+### Phase 1 — MVP (Free-Run Mode Only)
 Core typing experience with no structured lessons.
 
-### Phase 2 â€” Structured Lessons & Adaptive Engine
+### Phase 2 — Structured Lessons & Adaptive Engine
 Progressive lesson system with per-key proficiency tracking.
 
-### Phase 3 â€” Multi-Layout, Multi-Language & Advanced Modes
+### Phase 3 — Multi-Layout, Multi-Language & Advanced Modes
 Additional keyboard layouts, languages, and practice modes.
 
-### Phase 4 â€” Gamification & Social
+### Phase 4 — Gamification & Social
 Streaks, achievements, leaderboards, and engagement loops.
 
 ---
 
-## 3. Phase 1 â€” MVP
+## 3. Phase 1 — MVP
 
 ### 3.1 Overview
 
-The MVP delivers a single "Free Run" mode: the user opens the app, sees random common English words, and types. The app tracks WPM, accuracy, and typos in real time, highlights the correct finger for each key on the on-screen keyboard, and shows a session summary at the end. No accounts, no lessons, no progression â€” just a clean, satisfying typing experience.
+The MVP delivers a single "Free Run" mode: the user opens the app, sees random common English words, and types. The app tracks WPM, accuracy, and typos in real time, highlights the correct finger for each key on the on-screen keyboard, and shows a session summary at the end. No accounts, no lessons, no progression — just a clean, satisfying typing experience.
 
 ### 3.2 Feature Specification
 
@@ -52,13 +52,13 @@ The MVP delivers a single "Free Run" mode: the user opens the app, sees random c
 
 | Requirement | Detail |
 |---|---|
-| Window | Single resizable window, minimum 900Ã—600, default 1100Ã—700 |
+| Window | Single resizable window, minimum 900×600, default 1100×700 |
 | Theme | Dark theme only (MVP). Background: near-black (#0D1117 or similar) |
-| Menu Bar | Standard macOS menus: TouchType, File, Edit, Window, Help |
+| Menu Bar | Standard macOS menus: bkey, File, Edit, Window, Help |
 | Settings | Gear icon opens a settings panel (sheet or popover) |
 | App Lifecycle | Remember window position/size via `@AppStorage`. Resume last state on relaunch |
 
-#### 3.2.2 Free-Run Mode â€” Text Engine
+#### 3.2.2 Free-Run Mode — Text Engine
 
 **Word Source:**
 - Embedded word list of the 1,000 most common English words (curated from frequency corpora)
@@ -82,14 +82,14 @@ The MVP delivers a single "Free Run" mode: the user opens the app, sees random c
 - Smooth horizontal translation using `withAnimation(.easeOut(duration: 0.08))` on position changes
 - Blinking animation when idle (1s interval), stops blinking while actively typing
 
-#### 3.2.3 Free-Run Mode â€” Input Handling
+#### 3.2.3 Free-Run Mode — Input Handling
 
 **Key Event Capture:**
 - Use `NSEvent.addLocalMonitorForEvents(matching: .keyDown)` for key capture
 - Capture `event.characters` (layout-sensitive character) for input matching
 - Capture `event.keyCode` for physical key identification (finger tracking / keyboard highlighting)
 - Filter out modifier-only events (Cmd, Ctrl, Option alone)
-- Filter `event.isARepeat` â€” ignore auto-repeat keystrokes
+- Filter `event.isARepeat` — ignore auto-repeat keystrokes
 - Suppress system beep by returning `nil` from the monitor when handling a key
 
 **Character Matching Logic:**
@@ -117,14 +117,14 @@ on keyDown(character):
 3. **Complete state:** triggered by either (a) typing all generated words (generate 50 words per batch, generate more as user approaches the end) or (b) user presses `Esc` or `Cmd+Enter` to end early
 4. On completion, show session summary overlay
 
-#### 3.2.4 Free-Run Mode â€” Metrics
+#### 3.2.4 Free-Run Mode — Metrics
 
 **Real-Time Display (during typing):**
 
 | Metric | Calculation | Display |
 |---|---|---|
 | WPM | `(correctCharacters / 5) / elapsedMinutes` | Integer, updates every 500ms |
-| Accuracy | `correctCharacters / totalKeystrokes Ã— 100` | Percentage with `%` suffix |
+| Accuracy | `correctCharacters / totalKeystrokes × 100` | Percentage with `%` suffix |
 | Typos | Count of incorrect keystrokes | Integer |
 
 - Stats bar is positioned at the top of the typing area
@@ -146,14 +146,14 @@ on keyDown(character):
 | Time Elapsed | Duration in `m:ss` |
 | Best WPM | Peak 10-second rolling window WPM |
 
-Displayed as a centered overlay card with a "Try Again" button and a "Close" (Ã—) button.
+Displayed as a centered overlay card with a "Try Again" button and a "Close" (×) button.
 
 #### 3.2.5 On-Screen Keyboard
 
 **Layout:**
 - Visual representation of a standard US QWERTY keyboard (ANSI layout)
 - 5 rows: number row, QWERTY row, home row (ASDF), bottom row (ZXCV), modifier/space row
-- Key sizing proportional to real keyboard (space bar = 6Ã— width of letter key, shift = 2.5Ã—, etc.)
+- Key sizing proportional to real keyboard (space bar = 6× width of letter key, shift = 2.5×, etc.)
 - Keys rendered as rounded rectangles with subtle border and inner shadow
 - Key labels in SF Mono or system font, white/light gray, centered
 
@@ -180,9 +180,9 @@ Displayed as a centered overlay card with a "Try Again" button and a "Close" (Ã
 | State | Visual |
 |---|---|
 | Idle | Zone color at 20% opacity, light key label |
-| Target (next to type) | Zone color at 80% opacity, subtle scale-up (1.05Ã—), glow shadow |
-| Just Pressed â€” Correct | Brief flash to white/green (150ms), then return to idle |
-| Just Pressed â€” Incorrect | Brief flash to red (200ms), then return to idle |
+| Target (next to type) | Zone color at 80% opacity, subtle scale-up (1.05×), glow shadow |
+| Just Pressed — Correct | Brief flash to white/green (150ms), then return to idle |
+| Just Pressed — Incorrect | Brief flash to red (200ms), then return to idle |
 
 **Accessibility (MVP baseline):**
 - Each zone color has a distinct luminance value (validate with contrast checker)
@@ -195,7 +195,7 @@ Displayed as a centered overlay card with a "Try Again" button and a "Close" (Ã
 |---|---|---|---|
 | Show Keyboard | Toggle | On | On / Off |
 | Show Finger Labels | Toggle | Off | On / Off |
-| Font Size | Stepper | 22 | 16â€“32 in steps of 2 |
+| Font Size | Stepper | 22 | 16–32 in steps of 2 |
 | Sound on Keystroke | Toggle | Off | On / Off |
 | Sound on Error | Toggle | On | On / Off |
 
@@ -208,42 +208,42 @@ Settings stored in `UserDefaults` via `@AppStorage`.
 - Play via `NSSound` or `AVAudioPlayer` with pre-loaded buffers for zero latency
 - Respect system "Play user interface sound effects" setting
 
-### 3.3 Technical Architecture â€” MVP
+### 3.3 Technical Architecture — MVP
 
 #### 3.3.1 Project Structure
 
 ```
-TouchType/
-â”œâ”€â”€ App/
-â”‚   â”œâ”€â”€ TouchTypeApp.swift              // @main, WindowGroup
-â”‚   â””â”€â”€ AppState.swift                  // Global app state (ObservableObject)
-â”œâ”€â”€ Models/
-â”‚   â”œâ”€â”€ TypingSession.swift             // Session state machine
-â”‚   â”œâ”€â”€ WordGenerator.swift             // Random word selection
-â”‚   â”œâ”€â”€ KeyMapping.swift                // Physical key â†’ finger zone mapping
-â”‚   â”œâ”€â”€ LayoutDefinition.swift          // QWERTY layout data
-â”‚   â””â”€â”€ SessionMetrics.swift            // WPM/accuracy calculation
-â”œâ”€â”€ Views/
-â”‚   â”œâ”€â”€ MainView.swift                  // Root view: stats + text + keyboard
-â”‚   â”œâ”€â”€ TextDisplayView.swift           // Typing area with caret
-â”‚   â”œâ”€â”€ KeyboardView.swift              // On-screen keyboard
-â”‚   â”œâ”€â”€ KeyView.swift                   // Individual key rendering
-â”‚   â”œâ”€â”€ StatsBarView.swift              // WPM, accuracy, typos display
-â”‚   â”œâ”€â”€ SessionSummaryView.swift        // End-of-session overlay
-â”‚   â””â”€â”€ SettingsView.swift              // Settings panel
-â”œâ”€â”€ Services/
-â”‚   â”œâ”€â”€ KeyEventHandler.swift           // NSEvent monitor, key dispatch
-â”‚   â”œâ”€â”€ AudioManager.swift              // Sound playback
-â”‚   â””â”€â”€ TimerService.swift              // Precision timing
-â”œâ”€â”€ Resources/
-â”‚   â”œâ”€â”€ Words/
-â”‚   â”‚   â””â”€â”€ en_common_1000.json         // Word list
-â”‚   â”œâ”€â”€ Sounds/
-â”‚   â”‚   â”œâ”€â”€ keystroke.caf
-â”‚   â”‚   â””â”€â”€ error.caf
-â”‚   â””â”€â”€ Assets.xcassets                 // Colors, images
-â””â”€â”€ Extensions/
-    â””â”€â”€ Color+FingerZones.swift         // Finger zone color definitions
+bkey/
+├── App/
+│   ├── bkeyApp.swift              // @main, WindowGroup
+│   └── AppState.swift                  // Global app state (ObservableObject)
+├── Models/
+│   ├── TypingSession.swift             // Session state machine
+│   ├── WordGenerator.swift             // Random word selection
+│   ├── KeyMapping.swift                // Physical key → finger zone mapping
+│   ├── LayoutDefinition.swift          // QWERTY layout data
+│   └── SessionMetrics.swift            // WPM/accuracy calculation
+├── Views/
+│   ├── MainView.swift                  // Root view: stats + text + keyboard
+│   ├── TextDisplayView.swift           // Typing area with caret
+│   ├── KeyboardView.swift              // On-screen keyboard
+│   ├── KeyView.swift                   // Individual key rendering
+│   ├── StatsBarView.swift              // WPM, accuracy, typos display
+│   ├── SessionSummaryView.swift        // End-of-session overlay
+│   └── SettingsView.swift              // Settings panel
+├── Services/
+│   ├── KeyEventHandler.swift           // NSEvent monitor, key dispatch
+│   ├── AudioManager.swift              // Sound playback
+│   └── TimerService.swift              // Precision timing
+├── Resources/
+│   ├── Words/
+│   │   └── en_common_1000.json         // Word list
+│   ├── Sounds/
+│   │   ├── keystroke.caf
+│   │   └── error.caf
+│   └── Assets.xcassets                 // Colors, images
+└── Extensions/
+    └── Color+FingerZones.swift         // Finger zone color definitions
 ```
 
 #### 3.3.2 Core Data Models
@@ -282,7 +282,7 @@ enum CharacterState {
 struct KeyMapping {
     /// Maps physical key code (UInt16) to FingerZone
     static let keyCodeToFinger: [UInt16: FingerZone] = [
-        0: .leftRing,    // A â†’ actually Left Pinky for A
+        0: .leftRing,    // A → actually Left Pinky for A
         // ... complete mapping
     ]
     
@@ -306,21 +306,21 @@ enum FingerZone: String, CaseIterable {
 #### 3.3.3 Key Event Pipeline
 
 ```
-â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”     â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-â”‚  NSEvent     â”‚ â”€â”€â–º â”‚ KeyEvent     â”‚ â”€â”€â–º â”‚ TypingSessionâ”‚
-â”‚  Monitor     â”‚     â”‚ Handler      â”‚     â”‚ .processKey()â”‚
-â”‚ (keyDown)    â”‚     â”‚ (filter,     â”‚     â”‚              â”‚
-â”‚              â”‚     â”‚  decode)     â”‚     â”‚              â”‚
-â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜     â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜     â””â”€â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”€â”˜
-                                                  â”‚
-                          â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¼â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-                          â–¼                       â–¼              â–¼
-                    â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”          â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”   â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
-                    â”‚TextDisplayâ”‚         â”‚ Keyboard â”‚   â”‚ StatsBar â”‚
-                    â”‚View      â”‚         â”‚ View     â”‚   â”‚ View     â”‚
-                    â”‚(update   â”‚         â”‚(highlightâ”‚   â”‚(update   â”‚
-                    â”‚ chars)   â”‚         â”‚ target)  â”‚   â”‚ metrics) â”‚
-                    â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜         â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜   â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  NSEvent     │ ──► │ KeyEvent     │ ──► │ TypingSession│
+│  Monitor     │     │ Handler      │     │ .processKey()│
+│ (keyDown)    │     │ (filter,     │     │              │
+│              │     │  decode)     │     │              │
+└──────────────┘     └──────────────┘     └──────┬───────┘
+                                                  │
+                          ┌───────────────────────┼──────────────┐
+                          ▼                       ▼              ▼
+                    ┌──────────┐          ┌──────────┐   ┌──────────┐
+                    │TextDisplay│         │ Keyboard │   │ StatsBar │
+                    │View      │         │ View     │   │ View     │
+                    │(update   │         │(highlight│   │(update   │
+                    │ chars)   │         │ target)  │   │ metrics) │
+                    └──────────┘         └──────────┘   └──────────┘
 ```
 
 **KeyEventHandler implementation notes:**
@@ -336,7 +336,7 @@ enum FingerZone: String, CaseIterable {
 
 - **TextDisplayView:** use `Canvas` or `Text` with `AttributedString` for character coloring. Avoid creating one `Text` view per character (performance degrades past 200 characters). Preferred: single `AttributedString` rebuilt on each keystroke, SwiftUI diffing handles efficient updates
 - **KeyboardView:** static layout computed once; only key state (idle/target/pressed) changes. Use `@State` per-key or a dictionary of key states
-- **Caret animation:** `withAnimation(.easeOut(duration: 0.08))` on the x-offset of the caret. Calculate position from character index Ã— character width (monospace guarantees uniform width)
+- **Caret animation:** `withAnimation(.easeOut(duration: 0.08))` on the x-offset of the caret. Calculate position from character index × character width (monospace guarantees uniform width)
 - **Stats updates:** throttle to 500ms via `Timer.publish` or `.task` with `try await Task.sleep`
 
 #### 3.3.5 Build & Distribution
@@ -354,7 +354,7 @@ enum FingerZone: String, CaseIterable {
 
 ---
 
-## 4. Phase 2 â€” Structured Lessons & Adaptive Engine
+## 4. Phase 2 — Structured Lessons & Adaptive Engine
 
 ### 4.1 Overview
 
@@ -364,7 +364,7 @@ Phase 2 transforms the free-run tool into a learning application. It adds a prog
 
 #### 4.2.1 Curriculum Structure
 
-**Tier 1 â€” Home Row (Lessons 1â€“8)**
+**Tier 1 — Home Row (Lessons 1–8)**
 
 | Lesson | New Keys | Practice Set |
 |---|---|---|
@@ -377,7 +377,7 @@ Phase 2 transforms the free-run tool into a learning application. It adds a prog
 | 7 | Home row review | Common words using only home row letters |
 | 8 | Home row speed | Timed home row drill (gate: 15 WPM, 90% accuracy) |
 
-**Tier 2 â€” Top Row (Lessons 9â€“18)**
+**Tier 2 — Top Row (Lessons 9–18)**
 
 | Lesson | New Keys | Cumulative Set |
 |---|---|---|
@@ -386,10 +386,10 @@ Phase 2 transforms the free-run tool into a learning application. It adds a prog
 | 11 | T, Y | + t, y (index finger reach) |
 | 12 | W, O | + w, o |
 | 13 | Q, P | + q, p |
-| 14â€“15 | Review & words | Common words with home + top row |
-| 16â€“18 | Speed drills | Gate: 20 WPM, 90% accuracy |
+| 14–15 | Review & words | Common words with home + top row |
+| 16–18 | Speed drills | Gate: 20 WPM, 90% accuracy |
 
-**Tier 3 â€” Bottom Row (Lessons 19â€“28)**
+**Tier 3 — Bottom Row (Lessons 19–28)**
 
 | Lesson | New Keys |
 |---|---|
@@ -398,33 +398,33 @@ Phase 2 transforms the free-run tool into a learning application. It adds a prog
 | 21 | X, period |
 | 22 | Z, / |
 | 23 | B, N |
-| 24â€“26 | Full alphabet review |
-| 27â€“28 | Speed drills (gate: 25 WPM, 92% accuracy) |
+| 24–26 | Full alphabet review |
+| 27–28 | Speed drills (gate: 25 WPM, 92% accuracy) |
 
-**Tier 4 â€” Shift & Capitals (Lessons 29â€“34)**
+**Tier 4 — Shift & Capitals (Lessons 29–34)**
 
 - Opposite-hand shift technique (left shift for right-hand letters, right shift for left-hand letters)
 - Capital letters at sentence starts
 - Proper nouns
 - Gate: 25 WPM, 92% accuracy
 
-**Tier 5 â€” Punctuation & Numbers (Lessons 35â€“45)**
+**Tier 5 — Punctuation & Numbers (Lessons 35–45)**
 
 - Common punctuation: period, comma, apostrophe, question mark, exclamation
-- Number row: 1â€“0
+- Number row: 1–0
 - Symbols: @, #, $, etc.
 - Gate: 25 WPM, 90% accuracy
 
 #### 4.2.2 Lesson Mechanics
 
-- Each lesson consists of 3â€“5 exercises of increasing difficulty:
+- Each lesson consists of 3–5 exercises of increasing difficulty:
   1. **Introduction:** visual demonstration of new key(s) with finger guide
   2. **Letter drill:** individual characters and simple bigrams
   3. **Word practice:** real words limited to the learned key set
   4. **Sentence practice:** short sentences using learned keys (Tier 2+)
   5. **Speed challenge:** timed exercise serving as the lesson gate
 - Lesson completion requires meeting the gate criteria (minimum WPM + minimum accuracy)
-- Star rating system: â˜… (met gate), â˜…â˜… (gate + 10 WPM or 95% accuracy), â˜…â˜…â˜… (gate + 20 WPM and 98% accuracy)
+- Star rating system: ★ (met gate), ★★ (gate + 10 WPM or 95% accuracy), ★★★ (gate + 20 WPM and 98% accuracy)
 - Users can always replay completed lessons
 - Free-run mode remains available with the full character set at all times
 
@@ -451,24 +451,24 @@ struct KeyProficiency {
     var recentSpeeds: RingBuffer<Double>  // last 20 transition times (ms)
     var averageSpeed: Double  // mean of recentSpeeds
     var accuracy: Double  // correctAttempts / totalAttempts
-    var confidence: Double  // 0.0â€“1.0, computed from speed + accuracy
+    var confidence: Double  // 0.0–1.0, computed from speed + accuracy
 }
 ```
 
 **Confidence scoring (adapted from Keybr):**
 - Measure "transition time": time from the previous correct keystroke to this keystroke
-- Characters with average transition time â‰¤ 170ms (~35 WPM equivalent) get confidence 1.0
-- Characters with average transition time â‰¥ 500ms (~12 WPM equivalent) get confidence 0.0
+- Characters with average transition time ≤ 170ms (~35 WPM equivalent) get confidence 1.0
+- Characters with average transition time ≥ 500ms (~12 WPM equivalent) get confidence 0.0
 - Linear interpolation between those bounds
 - Accuracy factor: multiply confidence by `(accuracy ^ 2)` to heavily penalize error-prone keys
-- Final: `confidence = speedFactor Ã— (accuracy ^ 2)`
+- Final: `confidence = speedFactor × (accuracy ^ 2)`
 
 #### 4.3.2 Adaptive Text Generation
 
 When generating practice text (free-run or adaptive mode):
 
 1. Compute confidence for all learned characters
-2. Identify the 3â€“5 lowest-confidence characters
+2. Identify the 3–5 lowest-confidence characters
 3. Select words from the word database that contain those characters, weighted by:
    - `weight = (1.0 - confidence) ^ 2` for each weak character in the word
    - Words with multiple weak characters get additive weight
@@ -496,7 +496,7 @@ class LessonRecord {
     var lessonId: Int
     var bestWPM: Double
     var bestAccuracy: Double
-    var stars: Int  // 0â€“3
+    var stars: Int  // 0–3
     var completedAt: Date?
     var attempts: Int
 }
@@ -544,7 +544,7 @@ Introduced in Phase 2 alongside Gross WPM:
 #### 4.4.3 Per-Key Heatmap
 
 - Visual keyboard where each key's color intensity represents proficiency
-- Color scale: red (low confidence) â†’ yellow (medium) â†’ green (high)
+- Color scale: red (low confidence) → yellow (medium) → green (high)
 - Tap/hover on a key shows: accuracy %, average speed, total attempts
 - Accessible from the "Progress" section
 
@@ -560,7 +560,7 @@ Introduced in Phase 2 alongside Gross WPM:
 
 ---
 
-## 5. Phase 3 â€” Multi-Layout, Multi-Language & Advanced Modes
+## 5. Phase 3 — Multi-Layout, Multi-Language & Advanced Modes
 
 ### 5.1 Keyboard Layout System
 
@@ -606,8 +606,8 @@ Each layout is a JSON file mapping physical keys to characters and finger zones:
 | Phase 3a | QWERTZ | Germany, Austria, Switzerland |
 | Phase 3b | Dvorak | Enthusiast community |
 | Phase 3b | Colemak | Enthusiast community |
-| Phase 3c | Ukrainian (Ð™Ð¦Ð£ÐšÐ•Ð) | Ukraine |
-| Phase 3c | Russian (Ð™Ð¦Ð£ÐšÐ•Ð) | Russia |
+| Phase 3c | Ukrainian (ЙЦУКЕН) | Ukraine |
+| Phase 3c | Russian (ЙЦУКЕН) | Russia |
 | Phase 3c | Spanish (QWERTY ES) | Spain, Latin America |
 
 **Auto-detection:** read the current macOS input source via `TISCopyCurrentKeyboardInputSource()` and suggest the matching layout on first launch.
@@ -617,13 +617,13 @@ Each layout is a JSON file mapping physical keys to characters and finger zones:
 #### 5.2.1 Word Databases
 
 Each language requires:
-- **Common words list:** 1,000â€“5,000 most frequent words
+- **Common words list:** 1,000–5,000 most frequent words
 - **Sentence corpus:** 500+ real sentences for sentence practice
 - **Character frequency table:** for adaptive engine weighting
 
 | Language | Word List Source | Priority |
 |---|---|---|
-| English | Google 10K frequency list (curated to 1Kâ€“5K) | MVP |
+| English | Google 10K frequency list (curated to 1K–5K) | MVP |
 | Spanish | RAE frequency corpus | Phase 3 |
 | French | Lexique 3.0 | Phase 3 |
 | German | DeReWo frequency list | Phase 3 |
@@ -636,7 +636,7 @@ For languages requiring accented characters (French, Spanish, German):
 
 - Listen for `NSEvent` flagged events indicating dead key composition
 - Track composition state: `isComposing` flag
-- On composition complete, match the final composed character (e.g., `Ã©`, `Ã±`, `Ã¼`)
+- On composition complete, match the final composed character (e.g., `é`, `ñ`, `ü`)
 - On-screen keyboard shows dead key state: highlight the accent key, then highlight the base letter
 - Timeout: if no base letter is pressed within 2 seconds of a dead key, cancel composition
 
@@ -663,13 +663,13 @@ CJK input method support is deferred to Phase 4+ due to complexity. Phase 3 focu
 
 - Curated collection of 200+ literary quotes (public domain)
 - Includes punctuation and capitals for realistic typing
-- Attributed to source ("â€” Mark Twain")
+- Attributed to source ("— Mark Twain")
 
 #### 5.3.4 Custom Text
 
 - User pastes or types their own text
 - App formats it for typing practice
-- No word database needed â€” use the raw text
+- No word database needed — use the raw text
 
 #### 5.3.5 Code Mode
 
@@ -698,13 +698,13 @@ CJK input method support is deferred to Phase 4+ due to complexity. Phase 3 focu
 
 ---
 
-## 6. Phase 4 â€” Gamification & Social
+## 6. Phase 4 — Gamification & Social
 
 ### 6.1 Daily Goals & Streaks
 
 - **Daily goal:** configurable target (default: 10 minutes of practice OR 500 words)
 - **Streak counter:** consecutive days meeting the goal
-- **Forgiveness:** 21-hour window (not 24) â€” miss a day by 3 hours and still maintain streak
+- **Forgiveness:** 21-hour window (not 24) — miss a day by 3 hours and still maintain streak
 - **Streak freeze:** earn one per 7-day streak; manually activated to survive one missed day
 - **Visual:** flame icon with streak count in the main UI; celebration animation on goal completion
 
@@ -743,9 +743,9 @@ CJK input method support is deferred to Phase 4+ due to complexity. Phase 3 focu
 
 | Badge | Criteria |
 |---|---|
-| Home Row Hero | Complete all home row lessons with â˜…â˜…â˜… |
+| Home Row Hero | Complete all home row lessons with ★★★ |
 | Full Deck | Complete all lessons |
-| Master Typist | All lessons at â˜…â˜…â˜… |
+| Master Typist | All lessons at ★★★ |
 
 ### 6.3 Personal Bests
 
@@ -758,7 +758,7 @@ CJK input method support is deferred to Phase 4+ due to complexity. Phase 3 focu
 - Requires server infrastructure (CloudKit or custom backend)
 - Segmented: global all-time, weekly, friends
 - Anti-cheat: validate session data server-side, flag statistical anomalies
-- **Deferred** â€” only pursue if user base justifies server costs
+- **Deferred** — only pursue if user base justifies server costs
 
 ### 6.5 iCloud Sync
 
@@ -815,7 +815,7 @@ CJK input method support is deferred to Phase 4+ due to complexity. Phase 3 focu
 | Layer | Approach |
 |---|---|
 | Unit Tests | TypingSession logic, WPM/accuracy calculation, KeyMapping correctness, adaptive engine confidence scoring |
-| UI Tests | XCUITest for session flow: start â†’ type â†’ complete â†’ summary |
+| UI Tests | XCUITest for session flow: start → type → complete → summary |
 | Snapshot Tests | Keyboard rendering at each finger zone state |
 | Performance Tests | `XCTMetric` for keystroke processing time |
 | Manual QA | Typing feel, caret smoothness, audio sync, real-user session flow |
@@ -878,7 +878,7 @@ CJK input method support is deferred to Phase 4+ due to complexity. Phase 3 focu
 | Backspace | 51 | Right Pinky |
 | Enter | 36 | Right Pinky |
 | Tab | 48 | Left Pinky |
-| Escape | 53 | â€” |
+| Escape | 53 | — |
 
 ### 8.2 WPM Calculation Reference
 
@@ -887,9 +887,9 @@ Gross WPM = (totalCharactersTyped / 5) / elapsedTimeInMinutes
 
 Net WPM = grossWPM - (uncorrectedErrors / elapsedTimeInMinutes)
 
-Accuracy = correctKeystrokes / totalKeystrokes Ã— 100
+Accuracy = correctKeystrokes / totalKeystrokes × 100
 
-Consistency = 100 - (standardDeviation(rollingWPMSamples) / mean(rollingWPMSamples) Ã— 100)
+Consistency = 100 - (standardDeviation(rollingWPMSamples) / mean(rollingWPMSamples) × 100)
 ```
 
 **Rolling WPM:** computed over 10-second windows, sampled every 1 second, for the WPM graph and "Best WPM" tracking.
@@ -906,12 +906,12 @@ speedFactor:
 
 accuracyFactor = (correctAttempts / totalAttempts) ^ 2
 
-finalConfidence = speedFactor Ã— accuracyFactor
+finalConfidence = speedFactor × accuracyFactor
 ```
 
 Confidence is recalculated after each session using the last 20 transition times per character.
 
-### 8.4 Color Palette â€” Finger Zones
+### 8.4 Color Palette — Finger Zones
 
 | Zone | Hex | RGB | Luminance (relative) |
 |---|---|---|---|
@@ -925,7 +925,7 @@ Confidence is recalculated after each session using the last 20 transition times
 | Right Pinky | #B794F4 | 183, 148, 244 | 0.42 |
 | Thumb | #718096 | 113, 128, 150 | 0.26 |
 
-Luminance values are spread across the 0.26â€“0.63 range, ensuring differentiation even in grayscale.
+Luminance values are spread across the 0.26–0.63 range, ensuring differentiation even in grayscale.
 
 ### 8.5 Glossary
 
@@ -934,7 +934,7 @@ Luminance values are spread across the 0.26â€“0.63 range, ensuring differen
 | Gross WPM | Words per minute without error penalty. 1 word = 5 characters |
 | Net WPM | Gross WPM minus penalty for uncorrected errors |
 | Transition time | Milliseconds between consecutive correct keystrokes for a specific character |
-| Confidence | 0â€“1 score combining speed and accuracy for a single character |
+| Confidence | 0–1 score combining speed and accuracy for a single character |
 | Dead key | A key that produces no output until a second key is pressed (used for accents) |
 | Finger zone | The group of keys assigned to a specific finger in touch typing |
 | Gate | Minimum WPM and accuracy required to complete a lesson |
